@@ -6,6 +6,9 @@ import 'constants.dart';
 /// @return 앱의 기본 ThemeData 객체
 ThemeData getAppTheme() {
   return ThemeData(
+    // 기본 폰트 설정
+    fontFamily: 'Yangjin',
+
     // 기본 색상 설정
     // 앱의 주요 색상과 배경색 정의
     primaryColor: ColorPalette.primaryPink,

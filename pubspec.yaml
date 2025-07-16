@@ -32,3 +32,9 @@ flutter:
   # 온보딩 화면에 사용될 이미지
   assets:
     - assets/images/
+
+  # 폰트 설정
+  fonts:
+    - family: Yangjin
+      fonts:
+        - asset: assets/fonts/YangjinRegular.ttf
