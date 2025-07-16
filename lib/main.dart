@@ -1,66 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/storage_service.dart';
+import 'providers/onboarding_provider.dart';
+import 'views/onboarding/onboarding_screen.dart';
+import 'views/home/home_screen.dart';
+import 'utils/theme.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // StorageService 초기화
+  final storageService = StorageService();
+  await storageService.init();
+
+  runApp(MyApp(storageService: storageService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final StorageService storageService;
+
+  const MyApp({super.key, required this.storageService});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Card Talk',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => OnboardingProvider(storageService),
+        ),
+      ],
+      child: MaterialApp(
+        title: '카드톡',
+        theme: getAppTheme(),
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const AppRouter(),
+          '/onboarding': (context) => const OnboardingScreen(),
+          '/home': (context) => const HomeScreen(),
+        },
       ),
-      home: const MyHomePage(title: 'Card Talk'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+class AppRouter extends StatelessWidget {
+  const AppRouter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
+    return Consumer<OnboardingProvider>(
+      builder: (context, onboardingProvider, child) {
+        // 로딩 중일 때 스플래시 화면 표시
+        if (onboardingProvider.isLoading) {
+          return const SplashScreen();
+        }
+
+        // 온보딩 완료 여부에 따라 화면 결정
+        if (onboardingProvider.isOnboardingCompleted) {
+          return const HomeScreen();
+        } else {
+          return const OnboardingScreen();
+        }
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+          children: [
+            Text('💌', style: TextStyle(fontSize: 80)),
+            SizedBox(height: 16),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              '카드톡',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFF9AAC),
+              ),
             ),
+            SizedBox(height: 32),
+            CircularProgressIndicator(color: Color(0xFFFF9AAC)),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

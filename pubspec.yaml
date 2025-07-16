@@ -27,3 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # 온보딩 화면에 사용될 이미지
+  assets:
+    - assets/images/
