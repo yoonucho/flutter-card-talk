@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: UIStyles.spacingXL),
 
             // 템플릿 미리보기 섹션
-            _buildTemplatePreviewSection(),
+            _buildTemplatePreviewSection(context),
           ],
         ),
       ),
@@ -120,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                 emoji: AppEmojis.photo,
                 title: '갤러리',
                 subtitle: '내 카드 모아보기',
-                onTap: () => _showComingSoon(context),
+                onTap: () => _openGallery(context),
               ),
             ),
           ],
@@ -174,8 +174,9 @@ class HomeScreen extends StatelessWidget {
 
   /// 템플릿 미리보기 섹션 위젯 생성
   /// 인기 템플릿을 가로 스크롤 형태로 보여주는 UI 반환
+  /// @param context 빌드 컨텍스트
   /// @return 템플릿 미리보기 섹션 위젯
-  Widget _buildTemplatePreviewSection() {
+  Widget _buildTemplatePreviewSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -195,12 +196,15 @@ class HomeScreen extends StatelessWidget {
                 {'emoji': AppEmojis.surprise, 'name': '놀람'},
               ];
 
-              return Container(
-                width: 100,
-                margin: const EdgeInsets.only(right: UIStyles.spacingM),
-                child: _buildTemplateCard(
-                  templates[index]['emoji']!,
-                  templates[index]['name']!,
+              return GestureDetector(
+                onTap: () => _startCardCreation(context),
+                child: Container(
+                  width: 100,
+                  margin: const EdgeInsets.only(right: UIStyles.spacingM),
+                  child: _buildTemplateCard(
+                    templates[index]['emoji']!,
+                    templates[index]['name']!,
+                  ),
                 ),
               );
             },
@@ -235,36 +239,19 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// 카드 생성 시작
-  /// 카드 생성 화면으로 이동하는 함수 (현재는 Coming Soon 다이얼로그 표시)
+  /// 카드 생성 화면으로 이동하는 함수
   /// @param context 빌드 컨텍스트
   void _startCardCreation(BuildContext context) {
-    // 추후 템플릿 선택 화면으로 이동
-    _showComingSoon(context);
+    // 템플릿 목록 화면으로 이동
+    Navigator.of(context).pushNamed('/templates');
   }
 
-  /// Coming Soon 다이얼로그 표시
-  /// 아직 구현되지 않은 기능에 대한 안내 다이얼로그 표시
+  /// 갤러리 화면 열기
+  /// 갤러리 화면으로 이동하는 함수
   /// @param context 빌드 컨텍스트
-  void _showComingSoon(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Text(AppEmojis.sticker),
-            const SizedBox(width: UIStyles.spacingS),
-            const Text('Coming Soon!'),
-          ],
-        ),
-        content: const Text('이 기능은 곧 추가될 예정입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+  void _openGallery(BuildContext context) {
+    // 갤러리 화면으로 이동
+    Navigator.of(context).pushNamed('/gallery');
   }
 
   /// 온보딩 초기화 (테스트용)

@@ -48,6 +48,12 @@ class TemplateModel {
   /// 템플릿의 기본 메시지
   final String defaultMessage;
 
+  /// 사용자 생성 템플릿 여부
+  final bool isUserCreated;
+
+  /// 사용 횟수
+  final int usageCount;
+
   /// 템플릿 모델 생성자
   /// @param id 템플릿 고유 ID
   /// @param name 템플릿 이름
@@ -56,6 +62,8 @@ class TemplateModel {
   /// @param backgroundColor 배경색
   /// @param textColor 텍스트 색상
   /// @param defaultMessage 기본 메시지
+  /// @param isUserCreated 사용자 생성 템플릿 여부 (기본값: false)
+  /// @param usageCount 사용 횟수 (기본값: 0)
   const TemplateModel({
     required this.id,
     required this.name,
@@ -64,6 +72,8 @@ class TemplateModel {
     required this.backgroundColor,
     required this.textColor,
     required this.defaultMessage,
+    this.isUserCreated = false,
+    this.usageCount = 0,
   });
 
   /// JSON으로 변환
@@ -78,6 +88,8 @@ class TemplateModel {
       'backgroundColor': backgroundColor.value,
       'textColor': textColor.value,
       'defaultMessage': defaultMessage,
+      'isUserCreated': isUserCreated,
+      'usageCount': usageCount,
     };
   }
 
@@ -96,7 +108,51 @@ class TemplateModel {
       backgroundColor: Color(json['backgroundColor']),
       textColor: Color(json['textColor']),
       defaultMessage: json['defaultMessage'],
+      isUserCreated: json['isUserCreated'] ?? false,
+      usageCount: json['usageCount'] ?? 0,
     );
+  }
+
+  /// 템플릿 복사본 생성
+  /// 기존 템플릿의 속성을 변경한 새 템플릿 객체 생성
+  /// @param id 새 ID (null인 경우 기존 ID 사용)
+  /// @param name 새 이름 (null인 경우 기존 이름 사용)
+  /// @param emoji 새 이모지 (null인 경우 기존 이모지 사용)
+  /// @param category 새 카테고리 (null인 경우 기존 카테고리 사용)
+  /// @param backgroundColor 새 배경색 (null인 경우 기존 배경색 사용)
+  /// @param textColor 새 텍스트 색상 (null인 경우 기존 텍스트 색상 사용)
+  /// @param defaultMessage 새 기본 메시지 (null인 경우 기존 기본 메시지 사용)
+  /// @param isUserCreated 사용자 생성 템플릿 여부 (null인 경우 기존 값 사용)
+  /// @param usageCount 사용 횟수 (null인 경우 기존 사용 횟수 사용)
+  /// @return 속성이 변경된 새 TemplateModel 객체
+  TemplateModel copyWith({
+    String? id,
+    String? name,
+    String? emoji,
+    TemplateCategory? category,
+    Color? backgroundColor,
+    Color? textColor,
+    String? defaultMessage,
+    bool? isUserCreated,
+    int? usageCount,
+  }) {
+    return TemplateModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
+      category: category ?? this.category,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      textColor: textColor ?? this.textColor,
+      defaultMessage: defaultMessage ?? this.defaultMessage,
+      isUserCreated: isUserCreated ?? this.isUserCreated,
+      usageCount: usageCount ?? this.usageCount,
+    );
+  }
+
+  /// 기본 템플릿 목록 가져오기
+  /// @return 기본 제공되는 모든 템플릿 목록
+  static List<TemplateModel> getDefaultTemplates() {
+    return TemplateData.defaultTemplates;
   }
 }
 

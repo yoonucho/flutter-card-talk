@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 로컬 저장소 서비스
@@ -54,5 +56,74 @@ class StorageService {
   /// @return String 테마 모드
   String getThemeMode() {
     return _prefs.getString('theme_mode') ?? 'light';
+  }
+
+  /// 일반 데이터 저장
+  /// 키-값 쌍으로 데이터를 로컬에 저장
+  /// 복잡한 객체는 JSON으로 직렬화하여 저장
+  /// @param key 저장할 데이터의 키
+  /// @param value 저장할 데이터 값
+  /// @return Future<void> 저장 완료 Future
+  Future<void> setItem(String key, dynamic value) async {
+    try {
+      if (value is String) {
+        await _prefs.setString(key, value);
+      } else if (value is bool) {
+        await _prefs.setBool(key, value);
+      } else if (value is int) {
+        await _prefs.setInt(key, value);
+      } else if (value is double) {
+        await _prefs.setDouble(key, value);
+      } else if (value is List<String>) {
+        await _prefs.setStringList(key, value);
+      } else {
+        // 복잡한 객체는 JSON으로 직렬화
+        // 명시적으로 Map이나 List를 새로 생성하여 불변 객체 문제 방지
+        final jsonString = jsonEncode(value);
+        await _prefs.setString(key, jsonString);
+      }
+    } catch (e) {
+      debugPrint('데이터 저장 중 오류 발생: $e');
+      rethrow;
+    }
+  }
+
+  /// 데이터 조회
+  /// 저장된 데이터를 키를 통해 조회
+  /// 복잡한 객체는 JSON에서 역직렬화하여 반환
+  /// @param key 조회할 데이터의 키
+  /// @return dynamic 저장된 데이터 값, 없으면 null 반환
+  dynamic getItem(String key) {
+    final value = _prefs.get(key);
+    if (value == null) {
+      return null;
+    }
+
+    // 문자열인 경우 JSON 역직렬화 시도
+    if (value is String) {
+      try {
+        return jsonDecode(value);
+      } catch (e) {
+        // JSON이 아닌 일반 문자열인 경우 그대로 반환
+        return value;
+      }
+    }
+
+    return value;
+  }
+
+  /// 데이터 삭제
+  /// 지정된 키에 해당하는 데이터를 삭제
+  /// @param key 삭제할 데이터의 키
+  /// @return Future<bool> 삭제 성공 여부
+  Future<bool> removeItem(String key) async {
+    return await _prefs.remove(key);
+  }
+
+  /// 모든 데이터 삭제
+  /// 저장된 모든 데이터를 삭제
+  /// @return Future<bool> 삭제 성공 여부
+  Future<bool> clearAll() async {
+    return await _prefs.clear();
   }
 }

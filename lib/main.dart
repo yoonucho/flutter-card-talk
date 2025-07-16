@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/storage_service.dart';
 import 'providers/onboarding_provider.dart';
+import 'providers/template_provider.dart';
 import 'views/onboarding/onboarding_screen.dart';
 import 'views/home/home_screen.dart';
+import 'views/template/template_list_screen.dart';
+import 'views/template/template_edit_screen.dart';
+import 'views/gallery/gallery_screen.dart';
 import 'utils/theme.dart';
 
 /// 앱의 시작점
@@ -38,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => OnboardingProvider(storageService),
         ),
+        ChangeNotifierProvider(create: (_) => TemplateProvider(storageService)),
       ],
       child: MaterialApp(
         title: '카드톡',
@@ -48,6 +53,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/onboarding': (context) => const OnboardingScreen(),
           '/home': (context) => const HomeScreen(),
+          '/templates': (context) => const TemplateListScreen(),
+          '/template/new': (context) => const TemplateEditScreen(),
+          '/gallery': (context) => const GalleryScreen(),
         },
       ),
     );
