@@ -1,0 +1,29 @@
+name: test
+description: "카드톡 - 감성 카드 제작 및 공유 앱"
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+environment:
+  sdk: ^3.8.1
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # 온보딩 화면 구현을 위한 필수 패키지
+  introduction_screen: ^3.1.12
+
+  # 온보딩 완료 여부 저장
+  shared_preferences: ^2.2.2
+
+  # 간단한 상태 관리
+  provider: ^6.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
