@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 
 /// 앱의 기본 테마를 반환하는 함수
+/// 앱 전체에서 사용되는 색상, 텍스트 스타일, 컴포넌트 테마 등을 정의
+/// @return 앱의 기본 ThemeData 객체
 ThemeData getAppTheme() {
   return ThemeData(
     // 기본 색상 설정
+    // 앱의 주요 색상과 배경색 정의
     primaryColor: ColorPalette.primaryPink,
     scaffoldBackgroundColor: ColorPalette.background,
     colorScheme: ColorScheme.light(
@@ -15,6 +18,7 @@ ThemeData getAppTheme() {
     ),
 
     // AppBar 테마
+    // 앱 상단 바의 스타일 정의
     appBarTheme: const AppBarTheme(
       backgroundColor: ColorPalette.primaryLightPink,
       foregroundColor: ColorPalette.textPrimary,
@@ -24,6 +28,7 @@ ThemeData getAppTheme() {
     ),
 
     // 버튼 테마
+    // 앱에서 사용하는 다양한 버튼 스타일 정의
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorPalette.primaryPink,
@@ -62,6 +67,7 @@ ThemeData getAppTheme() {
     ),
 
     // 카드 테마
+    // 카드 컴포넌트의 스타일 정의
     cardTheme: const CardThemeData(
       color: ColorPalette.cardBackground,
       elevation: 2,
@@ -72,6 +78,7 @@ ThemeData getAppTheme() {
     ),
 
     // 텍스트 테마
+    // 앱 전체에서 사용되는 텍스트 스타일 정의
     textTheme: const TextTheme(
       headlineLarge: TextStyles.headingLarge,
       headlineMedium: TextStyles.headingMedium,
@@ -87,6 +94,7 @@ ThemeData getAppTheme() {
     ),
 
     // 입력 필드 테마
+    // 텍스트 입력 필드의 스타일 정의
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,

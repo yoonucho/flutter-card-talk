@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../utils/constants.dart';
 
+/// 홈 화면 위젯
+/// 앱의 메인 화면으로, 카드 생성 및 템플릿 탐색 기능 제공
 class HomeScreen extends StatelessWidget {
+  /// HomeScreen 생성자
   const HomeScreen({super.key});
 
   @override
@@ -58,6 +61,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 환영 섹션 위젯 생성
+  /// 사용자 환영 메시지를 포함한 카드 형태의 UI 반환
+  /// @return 환영 섹션 위젯
   Widget _buildWelcomeSection() {
     return Container(
       width: double.infinity,
@@ -88,6 +94,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 빠른 시작 섹션 위젯 생성
+  /// 템플릿 선택과 갤러리 접근을 위한 카드 UI 반환
+  /// @param context 빌드 컨텍스트
+  /// @return 빠른 시작 섹션 위젯
   Widget _buildQuickStartSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,6 +129,13 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 빠른 액션 카드 위젯 생성
+  /// 빠른 시작 섹션에서 사용하는 액션 카드 UI 반환
+  /// @param emoji 카드에 표시할 이모지
+  /// @param title 카드 제목
+  /// @param subtitle 카드 부제목
+  /// @param onTap 탭 이벤트 핸들러
+  /// @return 액션 카드 위젯
   Widget _buildQuickActionCard({
     required String emoji,
     required String title,
@@ -155,6 +172,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 템플릿 미리보기 섹션 위젯 생성
+  /// 인기 템플릿을 가로 스크롤 형태로 보여주는 UI 반환
+  /// @return 템플릿 미리보기 섹션 위젯
   Widget _buildTemplatePreviewSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,6 +210,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 템플릿 카드 위젯 생성
+  /// 템플릿 미리보기에서 사용하는 개별 템플릿 카드 UI 반환
+  /// @param emoji 템플릿 이모지
+  /// @param name 템플릿 이름
+  /// @return 템플릿 카드 위젯
   Widget _buildTemplateCard(String emoji, String name) {
     return Container(
       padding: const EdgeInsets.all(UIStyles.spacingM),
@@ -209,11 +234,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 카드 생성 시작
+  /// 카드 생성 화면으로 이동하는 함수 (현재는 Coming Soon 다이얼로그 표시)
+  /// @param context 빌드 컨텍스트
   void _startCardCreation(BuildContext context) {
     // 추후 템플릿 선택 화면으로 이동
     _showComingSoon(context);
   }
 
+  /// Coming Soon 다이얼로그 표시
+  /// 아직 구현되지 않은 기능에 대한 안내 다이얼로그 표시
+  /// @param context 빌드 컨텍스트
   void _showComingSoon(BuildContext context) {
     showDialog(
       context: context,
@@ -236,6 +267,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  /// 온보딩 초기화 (테스트용)
+  /// 온보딩 상태를 초기화하고 앱을 재시작하는 효과를 내는 함수
+  /// @param context 빌드 컨텍스트
   void _resetOnboarding(BuildContext context) {
     final onboardingProvider = Provider.of<OnboardingProvider>(
       context,

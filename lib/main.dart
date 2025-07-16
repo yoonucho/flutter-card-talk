@@ -6,24 +6,34 @@ import 'views/onboarding/onboarding_screen.dart';
 import 'views/home/home_screen.dart';
 import 'utils/theme.dart';
 
+/// 앱의 시작점
+/// 앱 초기화 및 실행을 담당
 void main() async {
+  // Flutter 엔진 초기화
   WidgetsFlutterBinding.ensureInitialized();
 
   // StorageService 초기화
   final storageService = StorageService();
   await storageService.init();
 
+  // 앱 실행
   runApp(MyApp(storageService: storageService));
 }
 
+/// 앱의 루트 위젯
+/// 앱의 전체 구조와 테마, 라우팅을 설정
 class MyApp extends StatelessWidget {
+  /// 로컬 저장소 서비스
   final StorageService storageService;
 
+  /// MyApp 생성자
+  /// @param storageService 초기화된 저장소 서비스
   const MyApp({super.key, required this.storageService});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
+      // 앱 전체에서 사용할 Provider 등록
       providers: [
         ChangeNotifierProvider(
           create: (_) => OnboardingProvider(storageService),
@@ -33,9 +43,9 @@ class MyApp extends StatelessWidget {
         title: '카드톡',
         theme: getAppTheme(),
         debugShowCheckedModeBanner: false,
-        initialRoute: '/',
+        home: const AppRouter(),
+        // 앱 내 라우트 정의
         routes: {
-          '/': (context) => const AppRouter(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/home': (context) => const HomeScreen(),
         },
@@ -44,7 +54,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// 앱 라우팅 관리 위젯
+/// 온보딩 완료 여부에 따라 적절한 화면으로 라우팅
 class AppRouter extends StatelessWidget {
+  /// AppRouter 생성자
   const AppRouter({super.key});
 
   @override
@@ -67,7 +80,10 @@ class AppRouter extends StatelessWidget {
   }
 }
 
+/// 스플래시 화면 위젯
+/// 앱 시작 시 로딩 중에 표시되는 화면
 class SplashScreen extends StatelessWidget {
+  /// SplashScreen 생성자
   const SplashScreen({super.key});
 
   @override
@@ -77,8 +93,10 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 앱 로고 이모지
             Text('💌', style: TextStyle(fontSize: 80)),
             SizedBox(height: 16),
+            // 앱 이름
             Text(
               '카드톡',
               style: TextStyle(
@@ -88,6 +106,7 @@ class SplashScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 32),
+            // 로딩 인디케이터
             CircularProgressIndicator(color: Color(0xFFFF9AAC)),
           ],
         ),

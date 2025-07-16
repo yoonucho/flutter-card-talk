@@ -6,7 +6,10 @@ import '../../providers/onboarding_provider.dart';
 import '../../utils/constants.dart';
 import '../home/home_screen.dart';
 
+/// 온보딩 화면 위젯
+/// 앱 최초 실행 시 사용자에게 앱의 주요 기능을 소개하는 화면
 class OnboardingScreen extends StatelessWidget {
+  /// OnboardingScreen 생성자
   const OnboardingScreen({super.key});
 
   @override
@@ -76,6 +79,9 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 
+  /// 온보딩 페이지 목록 생성
+  /// 온보딩 모델에서 정의된 페이지 데이터를 기반으로 PageViewModel 목록 생성
+  /// @return 온보딩 페이지 목록
   List<PageViewModel> _buildPages() {
     return onboardingPages.map((page) {
       return PageViewModel(
@@ -102,6 +108,10 @@ class OnboardingScreen extends StatelessWidget {
     }).toList();
   }
 
+  /// 온보딩 페이지 이미지 위젯 생성
+  /// 각 온보딩 페이지에 표시될 이미지 또는 이모지 위젯 생성
+  /// @param page 온보딩 페이지 데이터
+  /// @return 이미지 위젯
   Widget _buildImage(OnboardingPage page) {
     return Center(
       child: Column(
@@ -128,6 +138,9 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 
+  /// 온보딩 완료 처리
+  /// 온보딩 완료 상태를 저장하고 홈 화면으로 이동
+  /// @param context 빌드 컨텍스트
   void _onIntroEnd(BuildContext context) {
     final onboardingProvider = Provider.of<OnboardingProvider>(
       context,
