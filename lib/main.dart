@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/storage_service.dart';
+import 'services/share_service.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/template_provider.dart';
 import 'views/onboarding/onboarding_screen.dart';
@@ -8,6 +9,7 @@ import 'views/home/home_screen.dart';
 import 'views/template/template_list_screen.dart';
 import 'views/template/template_edit_screen.dart';
 import 'views/gallery/gallery_screen.dart';
+import 'views/share/share_intro_screen.dart';
 import 'utils/theme.dart';
 
 /// 앱의 시작점
@@ -20,8 +22,12 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
 
+  // ShareService 초기화
+  final shareService = ShareService();
+  await shareService.init();
+
   // 앱 실행
-  runApp(MyApp(storageService: storageService));
+  runApp(MyApp(storageService: storageService, shareService: shareService));
 }
 
 /// 앱의 루트 위젯
@@ -30,9 +36,17 @@ class MyApp extends StatelessWidget {
   /// 로컬 저장소 서비스
   final StorageService storageService;
 
+  /// 공유 서비스
+  final ShareService shareService;
+
   /// MyApp 생성자
   /// @param storageService 초기화된 저장소 서비스
-  const MyApp({super.key, required this.storageService});
+  /// @param shareService 초기화된 공유 서비스
+  const MyApp({
+    super.key,
+    required this.storageService,
+    required this.shareService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +70,17 @@ class MyApp extends StatelessWidget {
           '/templates': (context) => const TemplateListScreen(),
           '/template/new': (context) => const TemplateEditScreen(),
           '/gallery': (context) => const GalleryScreen(),
+        },
+        // 동적 라우팅 처리
+        onGenerateRoute: (settings) {
+          // 공유 링크 처리
+          if (settings.name?.startsWith('/share/') == true) {
+            final shareId = settings.name!.substring('/share/'.length);
+            return MaterialPageRoute(
+              builder: (context) => ShareIntroScreen(shareId: shareId),
+            );
+          }
+          return null;
         },
       ),
     );

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:test/models/template_model.dart';
 import 'package:test/providers/template_provider.dart';
+import 'package:test/services/share_service.dart';
 
 /// 템플릿 편집 화면
 /// 템플릿을 생성하거나 수정할 수 있는 화면
@@ -37,6 +39,10 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
   // 로딩 상태
   bool _isLoading = false;
+
+  // 공유 링크
+  String? _shareLink;
+  bool _showShareLink = false;
 
   @override
   void initState() {
@@ -75,6 +81,8 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
     setState(() {
       _isLoading = true;
+      _showShareLink = false;
+      _shareLink = null;
     });
 
     try {
@@ -105,25 +113,35 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         await templateProvider.addTemplate(template);
       }
 
+      // 공유 링크 생성
+      final shareService = ShareService();
+      await shareService.init();
+      final link = await shareService.createShareLink(
+        template,
+        _messageController.text,
+      );
+
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showShareLink = true;
+          _shareLink = link;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.template != null ? '템플릿이 수정되었습니다.' : '새 템플릿이 추가되었습니다.',
+              widget.template != null ? '카드가 수정되었습니다.' : '새 카드가 추가되었습니다.',
             ),
           ),
         );
-        // 성공 결과와 함께 이전 화면으로 돌아감
-        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('오류가 발생했습니다: $e')));
-      }
-    } finally {
-      if (mounted) {
+
         setState(() {
           _isLoading = false;
         });
@@ -166,11 +184,21 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
     );
   }
 
+  // 공유 링크 복사
+  void _copyShareLink() {
+    if (_shareLink != null) {
+      Clipboard.setData(ClipboardData(text: _shareLink!));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('공유 링크가 클립보드에 복사되었습니다.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.template != null ? '템플릿 수정' : '새 템플릿 만들기'),
+        title: Text(widget.template != null ? '카드 수정' : '카드 만들기'),
         actions: [
           IconButton(
             onPressed: _isLoading ? null : _saveTemplate,
@@ -217,7 +245,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                     const SizedBox(height: 8),
                     Text(
                       _nameController.text.isEmpty
-                          ? '템플릿 이름'
+                          ? '카드 이름'
                           : _nameController.text,
                       style: TextStyle(
                         fontSize: 20,
@@ -230,7 +258,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         _messageController.text.isEmpty
-                            ? '템플릿 메시지를 입력하세요.'
+                            ? '카드 메시지를 입력하세요.'
                             : _messageController.text,
                         style: TextStyle(fontSize: 16, color: _textColor),
                         textAlign: TextAlign.center,
@@ -243,17 +271,79 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
               ),
             ),
 
+            // 공유 링크 표시
+            if (_showShareLink && _shareLink != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.green),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '카드가 성공적으로 저장되었습니다!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('아래 링크를 통해 카드를 공유할 수 있습니다:'),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _shareLink!,
+                              style: const TextStyle(fontFamily: 'monospace'),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy),
+                            onPressed: _copyShareLink,
+                            tooltip: '링크 복사',
+                            iconSize: 20,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // 템플릿 이름
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: '템플릿 이름',
-                hintText: '템플릿 이름을 입력하세요',
+                labelText: '카드 이름',
+                hintText: '카드 이름을 입력하세요',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '템플릿 이름을 입력하세요';
+                  return '카드 이름을 입력하세요';
                 }
                 return null;
               },
@@ -338,17 +428,37 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
             TextFormField(
               controller: _messageController,
               decoration: const InputDecoration(
-                labelText: '기본 메시지',
-                hintText: '템플릿의 기본 메시지를 입력하세요',
+                labelText: '카드 메시지',
+                hintText: '카드에 담을 메시지를 입력하세요',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '기본 메시지를 입력하세요';
+                  return '메시지를 입력하세요';
                 }
                 return null;
               },
               maxLines: 5,
+            ),
+
+            // 저장 버튼
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _isLoading ? null : _saveTemplate,
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save),
+              label: Text(_isLoading ? '저장 중...' : '카드 저장 및 공유 링크 생성'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
           ],
         ),

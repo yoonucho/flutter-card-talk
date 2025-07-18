@@ -20,6 +20,12 @@ dependencies:
   provider: ^6.1.1
   flutter_colorpicker: ^1.0.3
 
+  # 고유 ID 생성
+  uuid: ^4.3.3
+
+  # 애니메이션
+  lottie: ^3.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -29,9 +35,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # 온보딩 화면에 사용될 이미지
+  # 앱에서 사용할 에셋
   assets:
     - assets/images/
+    - assets/animations/
 
   # 폰트 설정
   fonts:

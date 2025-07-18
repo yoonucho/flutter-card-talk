@@ -56,21 +56,21 @@ class TextStyles {
   // 제목 스타일
   /// 큰 제목 스타일 (앱 이름, 메인 헤더 등)
   static const TextStyle headingLarge = TextStyle(
-    fontSize: 28,
+    fontSize: 30, // 28에서 30으로 증가
     fontWeight: FontWeight.bold,
     color: ColorPalette.primaryPink,
   );
 
   /// 중간 크기 제목 스타일 (섹션 헤더 등)
   static const TextStyle headingMedium = TextStyle(
-    fontSize: 24,
+    fontSize: 26, // 24에서 26으로 증가
     fontWeight: FontWeight.bold,
     color: ColorPalette.textPrimary,
   );
 
   /// 작은 제목 스타일 (소제목 등)
   static const TextStyle headingSmall = TextStyle(
-    fontSize: 20,
+    fontSize: 22, // 20에서 22로 증가
     fontWeight: FontWeight.w600,
     color: ColorPalette.textPrimary,
   );
@@ -78,14 +78,14 @@ class TextStyles {
   // 부제목 스타일
   /// 큰 부제목 스타일
   static const TextStyle subtitleLarge = TextStyle(
-    fontSize: 18,
+    fontSize: 20, // 18에서 20으로 증가
     fontWeight: FontWeight.w600,
     color: ColorPalette.textSecondary,
   );
 
   /// 중간 크기 부제목 스타일
   static const TextStyle subtitleMedium = TextStyle(
-    fontSize: 16,
+    fontSize: 18, // 16에서 18로 증가
     fontWeight: FontWeight.w500,
     color: ColorPalette.textSecondary,
   );
@@ -93,21 +93,21 @@ class TextStyles {
   // 본문 스타일
   /// 큰 본문 텍스트 스타일 (강조된 본문 등)
   static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 18, // 16에서 18로 증가
     fontWeight: FontWeight.normal,
     color: ColorPalette.textPrimary,
   );
 
   /// 일반 본문 텍스트 스타일
   static const TextStyle bodyMedium = TextStyle(
-    fontSize: 14,
+    fontSize: 16, // 14에서 16으로 증가
     fontWeight: FontWeight.normal,
     color: ColorPalette.textPrimary,
   );
 
   /// 작은 본문 텍스트 스타일 (부가 정보 등)
   static const TextStyle bodySmall = TextStyle(
-    fontSize: 12,
+    fontSize: 14, // 12에서 14로 증가
     fontWeight: FontWeight.normal,
     color: ColorPalette.textSecondary,
   );
@@ -115,21 +115,21 @@ class TextStyles {
   // 버튼 스타일
   /// 큰 버튼 텍스트 스타일
   static const TextStyle buttonLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 18, // 16에서 18로 증가
     fontWeight: FontWeight.bold,
     color: Colors.white,
   );
 
   /// 일반 버튼 텍스트 스타일
   static const TextStyle buttonMedium = TextStyle(
-    fontSize: 14,
+    fontSize: 16, // 14에서 16으로 증가
     fontWeight: FontWeight.bold,
     color: Colors.white,
   );
 
   /// 작은 버튼 텍스트 스타일
   static const TextStyle buttonSmall = TextStyle(
-    fontSize: 12,
+    fontSize: 14, // 12에서 14로 증가
     fontWeight: FontWeight.bold,
     color: Colors.white,
   );
@@ -137,7 +137,7 @@ class TextStyles {
   // 캡션 스타일
   /// 캡션 텍스트 스타일 (이미지 설명, 작은 정보 등)
   static const TextStyle caption = TextStyle(
-    fontSize: 11,
+    fontSize: 13, // 11에서 13으로 증가
     fontWeight: FontWeight.normal,
     color: ColorPalette.textSecondary,
   );
