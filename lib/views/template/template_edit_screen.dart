@@ -43,7 +43,6 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
   // 공유 링크
   String? _shareLink;
-  bool _showShareLink = false;
 
   // 저장된 템플릿
   TemplateModel? _template;
@@ -91,7 +90,6 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
     setState(() {
       _isLoading = true;
-      _showShareLink = false;
       _shareLink = null;
     });
 
@@ -153,40 +151,122 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
   // 공유 링크 생성
   Future<void> _createShareLink() async {
-    if (_template == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('먼저 카드를 저장해주세요.')));
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _showShareLink = false;
       _shareLink = null;
     });
 
     try {
-      // 공유 링크 생성
+      // 1. 먼저 카드 저장
+      final templateProvider = Provider.of<TemplateProvider>(
+        context,
+        listen: false,
+      );
+
+      // 템플릿 데이터 생성
+      final template = TemplateModel(
+        id:
+            widget.template?.id ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _nameController.text,
+        emoji: _emojiController.text,
+        category: _selectedCategory,
+        backgroundColor: _backgroundColor,
+        textColor: _textColor,
+        defaultMessage: _messageController.text,
+        isUserCreated: true,
+        usageCount: widget.template?.usageCount ?? 0,
+      );
+
+      // 기존 템플릿 수정 또는 새 템플릿 추가
+      if (widget.template != null) {
+        await templateProvider.updateTemplate(template);
+      } else {
+        await templateProvider.addTemplate(template);
+      }
+
+      // 저장된 템플릿 참조 업데이트
+      _template = template;
+      _isSaved = true;
+
+      // 2. 공유 링크 생성
       final shareService = ShareService();
       await shareService.init();
       final link = await shareService.createShareLink(
-        _template!,
+        template,
         _messageController.text,
       );
 
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _showShareLink = true;
           _shareLink = link;
         });
+
+        // 3. 공유 링크 생성 완료 팝업 표시
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('공유 링크 생성 완료'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('카드가 저장되고 공유 링크가 생성되었습니다.'),
+                const SizedBox(height: 16),
+                const Text('공유 링크:'),
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          link,
+                          style: const TextStyle(fontFamily: 'monospace'),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: link));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('공유 링크가 클립보드에 복사되었습니다.')),
+                  );
+                },
+                child: const Text('링크 복사'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('확인'),
+              ),
+            ],
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('공유 링크 생성 중 오류가 발생했습니다: $e')));
+        ).showSnackBar(SnackBar(content: Text('오류가 발생했습니다: $e')));
 
         setState(() {
           _isLoading = false;
@@ -228,16 +308,6 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         ],
       ),
     );
-  }
-
-  // 공유 링크 복사
-  void _copyShareLink() {
-    if (_shareLink != null) {
-      Clipboard.setData(ClipboardData(text: _shareLink!));
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('공유 링크가 클립보드에 복사되었습니다.')));
-    }
   }
 
   @override
@@ -317,67 +387,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
               ),
             ),
 
-            // 공유 링크 표시
-            if (_showShareLink && _shareLink != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle, color: Colors.green),
-                        const SizedBox(width: 8),
-                        const Text(
-                          '카드가 성공적으로 저장되었습니다!',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('아래 링크를 통해 카드를 공유할 수 있습니다:'),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _shareLink!,
-                              style: const TextStyle(fontFamily: 'monospace'),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy),
-                            onPressed: _copyShareLink,
-                            tooltip: '링크 복사',
-                            iconSize: 20,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // 공유 링크 표시 부분 제거
 
             // 템플릿 이름
             TextFormField(
