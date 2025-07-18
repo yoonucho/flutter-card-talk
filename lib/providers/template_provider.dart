@@ -65,7 +65,7 @@ class TemplateProvider with ChangeNotifier {
         backgroundColor: template.backgroundColor,
         textColor: template.textColor,
         defaultMessage: template.defaultMessage,
-        isUserCreated: true,
+        isUserCreated: true, // 항상 사용자 생성 템플릿으로 설정
         usageCount: 0,
       );
 
@@ -96,7 +96,7 @@ class TemplateProvider with ChangeNotifier {
             backgroundColor: template.backgroundColor,
             textColor: template.textColor,
             defaultMessage: template.defaultMessage,
-            isUserCreated: true,
+            isUserCreated: true, // 항상 사용자 생성 템플릿으로 설정
             usageCount: 0,
           );
 

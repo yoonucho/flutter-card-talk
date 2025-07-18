@@ -6,6 +6,7 @@ import 'package:test/models/template_model.dart';
 import 'package:test/providers/template_provider.dart';
 import 'package:test/services/share_service.dart';
 import 'package:test/utils/constants.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 /// 템플릿 편집 화면
 /// 템플릿을 생성하거나 수정할 수 있는 화면
@@ -135,6 +136,11 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
             ),
           ),
         );
+
+        // 메인 페이지로 이동하고 저장 성공 결과 반환
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/home', (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -212,37 +218,53 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('공유 링크 생성 완료'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('카드가 저장되고 공유 링크가 생성되었습니다.'),
-                const SizedBox(height: 16),
-                const Text('공유 링크:'),
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          link,
-                          style: const TextStyle(fontFamily: 'monospace'),
-                          overflow: TextOverflow.ellipsis,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('카드가 저장되고 공유 링크가 생성되었습니다.'),
+                  const SizedBox(height: 16),
+                  const Text('공유 링크:'),
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: link));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('공유 링크가 클립보드에 복사되었습니다.'),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              link,
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -255,7 +277,14 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                 child: const Text('링크 복사'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // 갤러리에 저장되었음을 알리고 메인 페이지로 이동
+                  templateProvider.loadTemplates(); // 갤러리 목록 새로고침
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/home', (route) => false);
+                },
                 child: const Text('확인'),
               ),
             ],
@@ -312,238 +341,248 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isSaved ? '카드 수정' : '카드 만들기'),
-        actions: [
-          IconButton(
-            onPressed: _isLoading ? null : _saveTemplate,
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
-          ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // 템플릿 미리보기
-            Container(
-              height: 200,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: _backgroundColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _emojiController.text.isEmpty
-                          ? '😊'
-                          : _emojiController.text,
-                      style: const TextStyle(fontSize: 48),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _nameController.text.isEmpty
-                          ? '카드 이름'
-                          : _nameController.text,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: _textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        _messageController.text.isEmpty
-                            ? '카드 메시지를 입력하세요.'
-                            : _messageController.text,
-                        style: TextStyle(fontSize: 16, color: _textColor),
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+    return WillPopScope(
+      onWillPop: () async {
+        // 저장된 경우 true 반환
+        Navigator.of(context).pop(_isSaved);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_isSaved ? '카드 수정' : '카드 만들기'),
+          actions: [
+            IconButton(
+              onPressed: _isLoading ? null : _saveTemplate,
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save),
+            ),
+          ],
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // 템플릿 미리보기
+              Container(
+                height: 200,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: _backgroundColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // 공유 링크 표시 부분 제거
-
-            // 템플릿 이름
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '카드 이름',
-                hintText: '카드 이름을 입력하세요',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '카드 이름을 입력하세요';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // 이모지 선택
-            TextFormField(
-              controller: _emojiController,
-              decoration: const InputDecoration(
-                labelText: '대표 이모지',
-                hintText: '대표 이모지를 입력하세요',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '이모지를 입력하세요';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // 카테고리 선택
-            DropdownButtonFormField<TemplateCategory>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: '카테고리',
-                border: OutlineInputBorder(),
-              ),
-              items: TemplateCategory.values.map((category) {
-                return DropdownMenuItem<TemplateCategory>(
-                  value: category,
-                  child: Text('${category.emoji} ${category.displayName}'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // 색상 선택
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showColorPicker(isBackgroundColor: true),
-                    icon: const Icon(Icons.format_color_fill),
-                    label: const Text('배경색 선택'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _backgroundColor,
-                      foregroundColor: _backgroundColor.computeLuminance() > 0.5
-                          ? Colors.black
-                          : Colors.white,
-                    ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _emojiController.text.isEmpty
+                            ? '😊'
+                            : _emojiController.text,
+                        style: const TextStyle(fontSize: 48),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _nameController.text.isEmpty
+                            ? '카드 이름'
+                            : _nameController.text,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: _textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          _messageController.text.isEmpty
+                              ? '카드 메시지를 입력하세요.'
+                              : _messageController.text,
+                          style: TextStyle(fontSize: 16, color: _textColor),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showColorPicker(isBackgroundColor: false),
-                    icon: const Icon(Icons.format_color_text),
-                    label: const Text('텍스트 색상'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _textColor,
-                      foregroundColor: _textColor.computeLuminance() > 0.5
-                          ? Colors.black
-                          : Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // 기본 메시지
-            TextFormField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                labelText: '카드 메시지',
-                hintText: '카드에 담을 메시지를 입력하세요',
-                border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '메시지를 입력하세요';
-                }
-                return null;
-              },
-              maxLines: 5,
-            ),
 
-            // 저장 버튼
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _saveTemplate,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.save),
-                    label: Text(_isLoading ? '저장 중...' : '카드 저장'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+              // 공유 링크 표시 부분 제거
+
+              // 템플릿 이름
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: '카드 이름',
+                  hintText: '카드 이름을 입력하세요',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '카드 이름을 입력하세요';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // 이모지 선택
+              TextFormField(
+                controller: _emojiController,
+                decoration: const InputDecoration(
+                  labelText: '대표 이모지',
+                  hintText: '대표 이모지를 입력하세요',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '이모지를 입력하세요';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // 카테고리 선택
+              DropdownButtonFormField<TemplateCategory>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: '카테고리',
+                  border: OutlineInputBorder(),
+                ),
+                items: TemplateCategory.values.map((category) {
+                  return DropdownMenuItem<TemplateCategory>(
+                    value: category,
+                    child: Text('${category.emoji} ${category.displayName}'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // 색상 선택
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _showColorPicker(isBackgroundColor: true),
+                      icon: const Icon(Icons.format_color_fill),
+                      label: const Text('배경색 선택'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _backgroundColor,
+                        foregroundColor:
+                            _backgroundColor.computeLuminance() > 0.5
+                            ? Colors.black
+                            : Colors.white,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _createShareLink,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.share),
-                    label: Text(_isLoading ? '생성 중...' : '공유 링크 생성'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: ColorPalette.secondaryMint,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _showColorPicker(isBackgroundColor: false),
+                      icon: const Icon(Icons.format_color_text),
+                      label: const Text('텍스트 색상'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _textColor,
+                        foregroundColor: _textColor.computeLuminance() > 0.5
+                            ? Colors.black
+                            : Colors.white,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 기본 메시지
+              TextFormField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  labelText: '카드 메시지',
+                  hintText: '카드에 담을 메시지를 입력하세요',
+                  border: OutlineInputBorder(),
                 ),
-              ],
-            ),
-          ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '메시지를 입력하세요';
+                  }
+                  return null;
+                },
+                maxLines: 5,
+              ),
+
+              // 저장 버튼
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _saveTemplate,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.save),
+                      label: Text(_isLoading ? '저장 중...' : '카드 저장'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _createShareLink,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.share),
+                      label: Text(_isLoading ? '생성 중...' : '공유 링크 생성'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: ColorPalette.secondaryMint,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
