@@ -57,8 +57,8 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
     // 기존 템플릿이 있으면 해당 값으로 초기화, 없으면 기본값 사용
     final template = widget.template;
-    // 기존에 저장된 템플릿인 경우에만 _isSaved를 true로 설정
-    _isSaved = template?.id != null;
+    // 항상 새로운 편집 세션을 시작할 때는 저장되지 않은 상태로 시작
+    _isSaved = false;
     _template = template;
 
     _nameController = TextEditingController(text: template?.name ?? '');
