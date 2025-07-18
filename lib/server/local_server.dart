@@ -160,43 +160,131 @@ class LocalServer {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>카드톡 - 카드 보기</title>
+      <title>특별한 카드가 도착했어요</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
-        body {
-          font-family: 'Noto Sans KR', sans-serif;
+        * {
           margin: 0;
           padding: 0;
-          background-color: #f8f9fa;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: 'Noto Sans KR', sans-serif;
+          background-color: #ffccd5;
           display: flex;
           justify-content: center;
           align-items: center;
           min-height: 100vh;
+          overflow: hidden;
           transition: background-color 0.5s ease;
         }
+        
         .container {
-          max-width: 500px;
           width: 100%;
+          max-width: 500px;
+          text-align: center;
           padding: 20px;
+          position: relative;
         }
-        .card {
+        
+        .intro-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 10;
           background-color: #ffccd5;
+          transition: opacity 1s ease;
+        }
+        
+        .intro-text {
+          font-size: 24px;
+          font-weight: 700;
+          color: #e91e63;
+          margin-bottom: 40px;
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .intro-text.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .intro-button {
+          background-color: white;
+          color: #e91e63;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 50px;
+          font-size: 18px;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transform: scale(0.9);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          opacity: 0;
+          animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.4);
+          }
+          
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(233, 30, 99, 0);
+          }
+          
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(233, 30, 99, 0);
+          }
+        }
+        
+        .intro-button.show {
+          opacity: 1;
+        }
+        
+        .intro-button:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-container {
+          opacity: 0;
+          transition: opacity 1s ease;
+        }
+        
+        .card {
+          background-color: white;
           border-radius: 24px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
           padding: 40px 30px;
           text-align: center;
-          transition: all 0.5s ease;
           transform: translateY(20px);
           opacity: 0;
           position: relative;
           overflow: hidden;
+          transition: all 0.5s ease;
         }
+        
         .card.show {
           transform: translateY(0);
           opacity: 1;
         }
+        
         .emoji {
           font-size: 72px;
           margin-bottom: 24px;
@@ -204,9 +292,11 @@ class LocalServer {
           transform: scale(0);
           transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
         }
+        
         .card.show .emoji {
           transform: scale(1);
         }
+        
         .title {
           font-size: 28px;
           font-weight: 700;
@@ -216,10 +306,12 @@ class LocalServer {
           transform: translateY(20px);
           transition: all 0.5s ease 0.5s;
         }
+        
         .card.show .title {
           opacity: 1;
           transform: translateY(0);
         }
+        
         .message {
           font-size: 18px;
           line-height: 1.8;
@@ -229,10 +321,12 @@ class LocalServer {
           transform: translateY(20px);
           transition: all 0.5s ease 0.7s;
         }
+        
         .card.show .message {
           opacity: 1;
           transform: translateY(0);
         }
+        
         .footer {
           margin-top: 40px;
           font-size: 14px;
@@ -240,9 +334,11 @@ class LocalServer {
           opacity: 0;
           transition: opacity 0.5s ease 1s;
         }
+        
         .card.show .footer {
           opacity: 1;
         }
+        
         .logo {
           display: flex;
           align-items: center;
@@ -250,15 +346,19 @@ class LocalServer {
           margin-top: 16px;
           font-weight: 500;
           color: #666;
+          opacity: 0;
+          transition: opacity 0.5s ease 1.2s;
         }
-        .logo img {
-          height: 24px;
-          margin-right: 8px;
+        
+        .card-container.show .logo {
+          opacity: 1;
         }
+        
         #loading {
           text-align: center;
           padding: 40px;
         }
+        
         .spinner {
           display: inline-block;
           width: 40px;
@@ -268,9 +368,11 @@ class LocalServer {
           border-top-color: #ff9aac;
           animation: spin 1s ease-in-out infinite;
         }
+        
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        
         #error {
           background-color: #fff3f3;
           color: #e53935;
@@ -280,26 +382,12 @@ class LocalServer {
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
           display: none;
         }
+        
         .error-icon {
           font-size: 48px;
           margin-bottom: 16px;
         }
-        .share-button {
-          display: inline-block;
-          margin-top: 20px;
-          background-color: #4267B2;
-          color: white;
-          border: none;
-          padding: 10px 16px;
-          border-radius: 20px;
-          font-size: 14px;
-          cursor: pointer;
-          text-decoration: none;
-          transition: background-color 0.3s;
-        }
-        .share-button:hover {
-          background-color: #365899;
-        }
+        
         .confetti {
           position: absolute;
           width: 10px;
@@ -307,113 +395,200 @@ class LocalServer {
           background-color: #ff9aac;
           opacity: 0;
         }
+        
+        .heart {
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          background-color: #ff9aac;
+          transform: rotate(45deg);
+          opacity: 0;
+        }
+        
+        .heart:before,
+        .heart:after {
+          content: "";
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          background-color: #ff9aac;
+          border-radius: 50%;
+        }
+        
+        .heart:before {
+          top: -10px;
+          left: 0;
+        }
+        
+        .heart:after {
+          top: 0;
+          left: -10px;
+        }
       </style>
     </head>
     <body>
       <div class="container">
-        <div id="loading">
-          <div class="spinner"></div>
-          <p>카드 정보를 불러오는 중입니다...</p>
+        <!-- 인트로 화면 -->
+        <div class="intro-container" id="intro">
+          <div class="intro-text" id="introText">특별한 카드가 도착했어요!</div>
+          <button class="intro-button" id="introButton">클릭하세요</button>
         </div>
         
-        <div id="error">
-          <div class="error-icon">⚠️</div>
-          <h3>카드를 불러올 수 없습니다</h3>
-          <p>카드 정보를 불러오는데 실패했습니다.</p>
-          <button onclick="location.reload()">다시 시도</button>
-        </div>
-        
-        <div id="card" class="card" style="display: none;">
-          <div id="emoji" class="emoji">💌</div>
-          <div id="title" class="title">카드 제목</div>
-          <div id="message" class="message">카드 메시지</div>
-          <div class="footer">
-            <p>소중한 마음이 담긴 카드입니다</p>
-            <button class="share-button" onclick="shareCard()">
-              <span>친구에게 공유하기</span>
-            </button>
+        <!-- 카드 화면 -->
+        <div class="card-container" id="cardContainer">
+          <div id="loading">
+            <div class="spinner"></div>
+            <p>카드 정보를 불러오는 중입니다...</p>
           </div>
-        </div>
-        
-        <div class="logo">
-          <span>카드톡으로 제작된 카드입니다</span>
+          
+          <div id="error">
+            <div class="error-icon">⚠️</div>
+            <h3>카드를 불러올 수 없습니다</h3>
+            <p>카드 정보를 불러오는데 실패했습니다.</p>
+            <button onclick="location.reload()">다시 시도</button>
+          </div>
+          
+          <div id="card" class="card" style="display: none;">
+            <div id="emoji" class="emoji">💌</div>
+            <div id="title" class="title">카드 제목</div>
+            <div id="message" class="message">카드 메시지</div>
+            <div class="footer">
+              <p>소중한 마음이 담긴 카드입니다</p>
+            </div>
+          </div>
+          
+          <div class="logo">
+            <span>카드톡으로 제작된 카드입니다</span>
+          </div>
         </div>
       </div>
       
       <script>
-        // 카드 데이터 가져오기
-        fetch('/api/card/$id')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('카드 정보를 불러오는데 실패했습니다.');
-            }
-            return response.json();
-          })
-          .then(data => {
-            // 카드 데이터 표시
-            document.getElementById('emoji').textContent = data.emoji || '💌';
-            document.getElementById('title').textContent = data.name || '카드 제목';
-            document.getElementById('message').textContent = data.message || '카드 메시지';
+        // 인트로 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(() => {
+            document.getElementById('introText').classList.add('show');
+          }, 500);
+          
+          setTimeout(() => {
+            document.getElementById('introButton').classList.add('show');
+          }, 1000);
+          
+          // 인트로 버튼 클릭 이벤트
+          document.getElementById('introButton').addEventListener('click', function() {
+            // 인트로 화면 숨기기
+            document.getElementById('intro').style.opacity = '0';
             
-            // 카드 스타일 설정
-            const card = document.getElementById('card');
-            card.style.backgroundColor = data.backgroundColor || '#ffccd5';
+            // 카드 화면 표시
+            document.getElementById('cardContainer').style.opacity = '1';
             
-            // 텍스트 색상 설정
-            document.getElementById('title').style.color = data.textColor || '#e91e63';
-            document.getElementById('message').style.color = data.textColor || '#333333';
-            
-            // 배경색에 따라 body 배경색 조정
-            const bgColor = data.backgroundColor || '#ffccd5';
-            document.body.style.backgroundColor = getLighterColor(bgColor, 0.9);
-            
-            // 로딩 숨기고 카드 표시
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('card').style.display = 'block';
-            
-            // 애니메이션 효과
+            // 인트로 화면 완전히 제거
             setTimeout(() => {
-              document.getElementById('card').classList.add('show');
-              createConfetti();
-            }, 100);
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('error').style.display = 'block';
+              document.getElementById('intro').style.display = 'none';
+              
+              // 카드 데이터 가져오기
+              loadCardData();
+            }, 1000);
+            
+            // 하트 효과 생성
+            createHearts();
           });
+        });
         
-        // 카드 공유하기
-        function shareCard() {
-          if (navigator.share) {
-            navigator.share({
-              title: '카드톡 - 특별한 카드가 도착했어요',
-              text: '소중한 마음이 담긴 카드를 확인해보세요.',
-              url: window.location.href
-            })
-            .catch(error => console.log('공유하기 실패:', error));
-          } else {
-            // 클립보드에 복사
-            navigator.clipboard.writeText(window.location.href)
-              .then(() => alert('링크가 클립보드에 복사되었습니다.'))
-              .catch(err => console.error('클립보드 복사 실패:', err));
+        // 하트 효과 생성
+        function createHearts() {
+          const container = document.querySelector('.container');
+          
+          for (let i = 0; i < 20; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            
+            // 랜덤 위치
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.top = Math.random() * 100 + '%';
+            
+            // 랜덤 크기
+            const size = Math.random() * 15 + 10;
+            heart.style.width = size + 'px';
+            heart.style.height = size + 'px';
+            
+            // 하트 크기에 맞게 before, after 요소 크기 조정
+            heart.style.setProperty('--size', size + 'px');
+            
+            // 랜덤 색상
+            const colors = ['#ff9aac', '#ff6b8b', '#ff3e6d', '#ff1e4d'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.backgroundColor = color;
+            
+            container.appendChild(heart);
+            
+            // 애니메이션
+            heart.animate([
+              { 
+                opacity: 0,
+                transform: 'rotate(45deg) translate(0, 0) scale(0)'
+              },
+              { 
+                opacity: 0.8,
+                transform: 'rotate(45deg) translate(0, -100px) scale(1)'
+              },
+              { 
+                opacity: 0,
+                transform: 'rotate(45deg) translate(0, -200px) scale(0.5)'
+              }
+            ], {
+              duration: Math.random() * 2000 + 1000,
+              delay: Math.random() * 500,
+              easing: 'ease-out',
+              iterations: 1
+            });
+            
+            // 애니메이션 후 요소 제거
+            setTimeout(() => {
+              heart.remove();
+            }, 3000);
           }
         }
         
-        // 색상 밝게 하기
-        function getLighterColor(hex, factor) {
-          // hex to rgb
-          let r = parseInt(hex.substring(1, 3), 16);
-          let g = parseInt(hex.substring(3, 5), 16);
-          let b = parseInt(hex.substring(5, 7), 16);
-          
-          // 밝게 만들기
-          r = Math.min(255, r + Math.round((255 - r) * factor));
-          g = Math.min(255, g + Math.round((255 - g) * factor));
-          b = Math.min(255, b + Math.round((255 - b) * factor));
-          
-          // rgb to hex
-          return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        // 카드 데이터 가져오기
+        function loadCardData() {
+          fetch('/api/card/$id')
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('카드 정보를 불러오는데 실패했습니다.');
+              }
+              return response.json();
+            })
+            .then(data => {
+              // 카드 데이터 표시
+              document.getElementById('emoji').textContent = data.emoji || '💌';
+              document.getElementById('title').textContent = data.name || '카드 제목';
+              document.getElementById('message').textContent = data.message || '카드 메시지';
+              
+              // 카드 스타일 설정
+              const card = document.getElementById('card');
+              card.style.backgroundColor = data.backgroundColor || '#ffffff';
+              
+              // 텍스트 색상 설정
+              document.getElementById('title').style.color = data.textColor || '#e91e63';
+              document.getElementById('message').style.color = data.textColor || '#333333';
+              
+              // 로딩 숨기고 카드 표시
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('card').style.display = 'block';
+              
+              // 애니메이션 효과
+              setTimeout(() => {
+                document.getElementById('card').classList.add('show');
+                document.getElementById('cardContainer').classList.add('show');
+                createConfetti();
+              }, 100);
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('error').style.display = 'block';
+            });
         }
         
         // 색종이 효과
