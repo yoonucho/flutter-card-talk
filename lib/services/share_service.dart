@@ -13,8 +13,8 @@ class ShareService {
   /// SharedPreferences 인스턴스
   late SharedPreferences _prefs;
 
-  /// 기본 공유 URL
-  static const String baseShareUrl = 'https://example.com/share/';
+  /// 기본 공유 URL (로컬 서버)
+  static const String baseShareUrl = 'http://localhost:8080/view/';
 
   /// 싱글톤 패턴 구현
   /// 항상 같은 인스턴스를 반환하도록 팩토리 생성자 사용
@@ -52,7 +52,7 @@ class ShareService {
       // 데이터 저장
       await _prefs.setString('share_$uuid', jsonEncode(shareData));
 
-      // 공유 링크 생성
+      // 공유 링크 생성 (로컬 서버 URL 사용)
       final shareLink = '$baseShareUrl$uuid';
 
       return shareLink;

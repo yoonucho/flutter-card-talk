@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:uni_links/uni_links.dart';
+import 'package:flutter/services.dart';
 import 'services/storage_service.dart';
 import 'services/share_service.dart';
+import 'server/local_server.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/template_provider.dart';
 import 'views/onboarding/onboarding_screen.dart';
@@ -26,27 +30,123 @@ void main() async {
   final shareService = ShareService();
   await shareService.init();
 
+  // 로컬 서버 시작
+  final localServer = LocalServer();
+  try {
+    await localServer.start();
+  } catch (e) {
+    print('로컬 서버 시작 중 오류 발생: $e');
+  }
+
+  // 앱 종료 시 로컬 서버 종료
+  ProcessSignal.sigint.watch().listen((_) async {
+    await localServer.stop();
+    exit(0);
+  });
+
+  ProcessSignal.sigterm.watch().listen((_) async {
+    await localServer.stop();
+    exit(0);
+  });
+
   // 앱 실행
-  runApp(MyApp(storageService: storageService, shareService: shareService));
+  runApp(
+    MyApp(
+      storageService: storageService,
+      shareService: shareService,
+      localServer: localServer,
+    ),
+  );
 }
 
 /// 앱의 루트 위젯
 /// 앱의 전체 구조와 테마, 라우팅을 설정
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   /// 로컬 저장소 서비스
   final StorageService storageService;
 
   /// 공유 서비스
   final ShareService shareService;
 
+  /// 로컬 서버
+  final LocalServer localServer;
+
   /// MyApp 생성자
   /// @param storageService 초기화된 저장소 서비스
   /// @param shareService 초기화된 공유 서비스
+  /// @param localServer 초기화된 로컬 서버
   const MyApp({
     super.key,
     required this.storageService,
     required this.shareService,
+    required this.localServer,
   });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// 초기 링크
+  String? _initialLink;
+
+  /// 초기 URI
+  Uri? _initialUri;
+
+  /// 라우터 키
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _initUniLinks();
+  }
+
+  /// 딥 링크 초기화 및 처리
+  Future<void> _initUniLinks() async {
+    // 앱이 실행 중이지 않을 때 열린 링크 처리
+    try {
+      final initialLink = await getInitialLink();
+      if (initialLink != null) {
+        _initialLink = initialLink;
+        _initialUri = Uri.parse(initialLink);
+        _handleLink(_initialUri!);
+      }
+    } on PlatformException {
+      // 딥 링크를 가져오는 중 오류 발생
+      print('딥 링크를 가져오는 중 오류가 발생했습니다.');
+    }
+
+    // 앱이 실행 중일 때 열린 링크 처리
+    linkStream.listen(
+      (String? link) {
+        if (link != null) {
+          final uri = Uri.parse(link);
+          _handleLink(uri);
+        }
+      },
+      onError: (err) {
+        // 딥 링크 스트림 오류 처리
+        print('딥 링크 스트림 오류: $err');
+      },
+    );
+  }
+
+  /// 링크 처리
+  void _handleLink(Uri uri) {
+    // cardtalk://share/{id} 형식의 링크 처리
+    if (uri.scheme == 'cardtalk' && uri.host == 'share') {
+      final shareId = uri.pathSegments.isNotEmpty
+          ? uri.pathSegments.first
+          : null;
+      if (shareId != null) {
+        // 공유 화면으로 이동
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _navigatorKey.currentState?.pushNamed('/share/$shareId');
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +154,17 @@ class MyApp extends StatelessWidget {
       // 앱 전체에서 사용할 Provider 등록
       providers: [
         ChangeNotifierProvider(
-          create: (_) => OnboardingProvider(storageService),
+          create: (_) => OnboardingProvider(widget.storageService),
         ),
-        ChangeNotifierProvider(create: (_) => TemplateProvider(storageService)),
+        ChangeNotifierProvider(
+          create: (_) => TemplateProvider(widget.storageService),
+        ),
       ],
       child: MaterialApp(
         title: '카드톡',
         theme: getAppTheme(),
         debugShowCheckedModeBanner: false,
+        navigatorKey: _navigatorKey,
         home: const AppRouter(),
         // 앱 내 라우트 정의
         routes: {

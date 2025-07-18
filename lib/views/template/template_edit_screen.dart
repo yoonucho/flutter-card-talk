@@ -5,6 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:test/models/template_model.dart';
 import 'package:test/providers/template_provider.dart';
 import 'package:test/services/share_service.dart';
+import 'package:test/utils/constants.dart';
 
 /// 템플릿 편집 화면
 /// 템플릿을 생성하거나 수정할 수 있는 화면
@@ -44,12 +45,21 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
   String? _shareLink;
   bool _showShareLink = false;
 
+  // 저장된 템플릿
+  TemplateModel? _template;
+
+  // 저장 여부
+  bool _isSaved = false;
+
   @override
   void initState() {
     super.initState();
 
     // 기존 템플릿이 있으면 해당 값으로 초기화, 없으면 기본값 사용
     final template = widget.template;
+    // 기존에 저장된 템플릿인 경우에만 _isSaved를 true로 설정
+    _isSaved = template?.id != null;
+    _template = template;
 
     _nameController = TextEditingController(text: template?.name ?? '');
 
@@ -113,19 +123,11 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         await templateProvider.addTemplate(template);
       }
 
-      // 공유 링크 생성
-      final shareService = ShareService();
-      await shareService.init();
-      final link = await shareService.createShareLink(
-        template,
-        _messageController.text,
-      );
-
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _showShareLink = true;
-          _shareLink = link;
+          _template = template; // 저장된 템플릿 참조 저장
+          _isSaved = true; // 저장 완료 플래그 설정
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +143,50 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('오류가 발생했습니다: $e')));
+
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // 공유 링크 생성
+  Future<void> _createShareLink() async {
+    if (_template == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('먼저 카드를 저장해주세요.')));
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _showShareLink = false;
+      _shareLink = null;
+    });
+
+    try {
+      // 공유 링크 생성
+      final shareService = ShareService();
+      await shareService.init();
+      final link = await shareService.createShareLink(
+        _template!,
+        _messageController.text,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showShareLink = true;
+          _shareLink = link;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('공유 링크 생성 중 오류가 발생했습니다: $e')));
 
         setState(() {
           _isLoading = false;
@@ -198,7 +244,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.template != null ? '카드 수정' : '카드 만들기'),
+        title: Text(_isSaved ? '카드 수정' : '카드 만들기'),
         actions: [
           IconButton(
             onPressed: _isLoading ? null : _saveTemplate,
@@ -443,22 +489,49 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
 
             // 저장 버튼
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _isLoading ? null : _saveTemplate,
-              icon: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(_isLoading ? '저장 중...' : '카드 저장 및 공유 링크 생성'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _saveTemplate,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save),
+                    label: Text(_isLoading ? '저장 중...' : '카드 저장'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _createShareLink,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.share),
+                    label: Text(_isLoading ? '생성 중...' : '공유 링크 생성'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: ColorPalette.secondaryMint,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
