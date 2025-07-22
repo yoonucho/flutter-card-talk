@@ -16,6 +16,10 @@ class TemplateProvider with ChangeNotifier {
   List<TemplateModel> get templates => [..._templates];
   List<TemplateModel> get userTemplates => [..._userTemplates];
 
+  // 기본 템플릿만 반환 (사용자 생성 템플릿 제외)
+  List<TemplateModel> get defaultTemplates =>
+      _templates.where((template) => !template.isUserCreated).toList();
+
   // 모든 템플릿 로드 (기본 템플릿 + 사용자 템플릿)
   Future<void> loadTemplates() async {
     _isLoading = true;
@@ -50,6 +54,16 @@ class TemplateProvider with ChangeNotifier {
   List<TemplateModel> getTemplatesByCategory(TemplateCategory category) {
     return _templates
         .where((template) => template.category == category)
+        .toList();
+  }
+
+  // 카테고리별 기본 템플릿만 조회 (사용자 생성 템플릿 제외)
+  List<TemplateModel> getDefaultTemplatesByCategory(TemplateCategory category) {
+    return _templates
+        .where(
+          (template) =>
+              template.category == category && !template.isUserCreated,
+        )
         .toList();
   }
 
