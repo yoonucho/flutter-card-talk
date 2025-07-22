@@ -194,7 +194,7 @@ class HomeScreen extends StatelessWidget {
       },
       {
         'category': TemplateCategory.birthday,
-        'emoji': AppEmojis.celebration,
+        'emoji': AppEmojis.birthday,
         'name': '생일',
       },
       {
@@ -217,7 +217,7 @@ class HomeScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('인기 템플릿', style: TextStyles.headingSmall),
+        Text('카테고리별 템플릿', style: TextStyles.headingSmall),
         const SizedBox(height: UIStyles.spacingM),
         SizedBox(
           height: 120,

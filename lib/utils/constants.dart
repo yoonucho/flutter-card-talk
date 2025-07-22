@@ -175,8 +175,11 @@ class AppEmojis {
   /// 슬픔 이모지 (눈물)
   static const String sad = "😢";
 
-  /// 축하 이모지 (케이크)
-  static const String celebration = "🎂";
+  /// 축하 이모지 (폭죽)
+  static const String celebration = "🎉";
+
+  /// 생일 이모지 (생일 케이크)
+  static const String birthday = "🎂";
 
   // 카드 관련 이모지
   /// 카드 이모지 (편지)
