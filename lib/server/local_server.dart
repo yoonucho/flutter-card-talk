@@ -220,18 +220,33 @@ class LocalServer {
           transform: translateY(0);
         }
         
+        .intro-subtext {
+          font-size: 16px;
+          color: #666;
+          margin-bottom: 30px;
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .intro-subtext.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
         .intro-button {
-          background-color: white;
+          background-color: transparent;
           color: #e91e63;
           border: none;
-          padding: 15px 30px;
-          border-radius: 50px;
-          font-size: 18px;
-          font-weight: 700;
+          padding: 0;
+          font-size: 48px;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           transform: scale(0.9);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition: transform 0.3s ease;
           opacity: 0;
           animation: pulse 2s infinite;
         }
@@ -239,17 +254,17 @@ class LocalServer {
         @keyframes pulse {
           0% {
             transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.4);
+            opacity: 0.7;
           }
           
           70% {
-            transform: scale(1);
-            box-shadow: 0 0 0 10px rgba(233, 30, 99, 0);
+            transform: scale(1.1);
+            opacity: 1;
           }
           
           100% {
             transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(233, 30, 99, 0);
+            opacity: 0.7;
           }
         }
         
@@ -258,8 +273,7 @@ class LocalServer {
         }
         
         .intro-button:hover {
-          transform: scale(1.05);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+          transform: scale(1.2);
         }
         
         .card-container {
@@ -431,7 +445,8 @@ class LocalServer {
         <!-- 인트로 화면 -->
         <div class="intro-container" id="intro">
           <div class="intro-text" id="introText">특별한 카드가 도착했어요!</div>
-          <button class="intro-button" id="introButton">클릭하세요</button>
+          <div class="intro-subtext" id="introSubtext">아래 버튼을 눌러 확인하세요</div>
+          <button class="intro-button" id="introButton">❤️</button>
         </div>
         
         <!-- 카드 화면 -->
@@ -471,8 +486,12 @@ class LocalServer {
           }, 500);
           
           setTimeout(() => {
+            document.getElementById('introSubtext').classList.add('show');
+          }, 800);
+          
+          setTimeout(() => {
             document.getElementById('introButton').classList.add('show');
-          }, 1000);
+          }, 1200);
           
           // 인트로 버튼 클릭 이벤트
           document.getElementById('introButton').addEventListener('click', function() {
