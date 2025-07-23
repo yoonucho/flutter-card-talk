@@ -52,7 +52,7 @@ class LocalServer {
         .addHandler(app);
 
     // 서버 시작
-    _server = await io.serve(handler, 'localhost', port);
+    _server = await io.serve(handler, '0.0.0.0', port);
     print('로컬 서버가 시작되었습니다: http://localhost:$port');
   }
 

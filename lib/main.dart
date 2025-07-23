@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/storage_service.dart';
 import 'services/share_service.dart';
 import 'server/local_server.dart';
@@ -21,6 +22,11 @@ import 'utils/theme.dart';
 void main() async {
   // Flutter 엔진 초기화
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 한글 입력을 위한 설정
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+  );
 
   // StorageService 초기화
   final storageService = StorageService();
@@ -93,23 +99,28 @@ class _MyAppState extends State<MyApp> {
   /// 초기 URI
   Uri? _initialUri;
 
+  /// AppLinks 인스턴스
+  late AppLinks _appLinks;
+
   /// 라우터 키
   final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
-    _initUniLinks();
+    _initAppLinks();
   }
 
   /// 딥 링크 초기화 및 처리
-  Future<void> _initUniLinks() async {
+  Future<void> _initAppLinks() async {
+    _appLinks = AppLinks();
+
     // 앱이 실행 중이지 않을 때 열린 링크 처리
     try {
-      final initialLink = await getInitialLink();
-      if (initialLink != null) {
-        _initialLink = initialLink;
-        _initialUri = Uri.parse(initialLink);
+      final initialUri = await _appLinks.getInitialAppLink();
+      if (initialUri != null) {
+        _initialLink = initialUri.toString();
+        _initialUri = initialUri;
         _handleLink(_initialUri!);
       }
     } on PlatformException {
@@ -118,10 +129,9 @@ class _MyAppState extends State<MyApp> {
     }
 
     // 앱이 실행 중일 때 열린 링크 처리
-    linkStream.listen(
-      (String? link) {
-        if (link != null) {
-          final uri = Uri.parse(link);
+    _appLinks.uriLinkStream.listen(
+      (Uri? uri) {
+        if (uri != null) {
           _handleLink(uri);
         }
       },
@@ -166,6 +176,21 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         navigatorKey: _navigatorKey,
         home: const AppRouter(),
+        builder: (context, child) {
+          // 한글 입력을 위한 설정
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+            child: child!,
+          );
+        },
+        // 한글 지원을 위한 localization 설정
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
+        locale: const Locale('ko', 'KR'),
         // 앱 내 라우트 정의
         routes: {
           '/onboarding': (context) => const OnboardingScreen(),

@@ -438,6 +438,9 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                   }
                   return null;
                 },
+                keyboardType: TextInputType.text,
+                enableInteractiveSelection: true,
+                enableSuggestions: true,
               ),
               const SizedBox(height: 16),
 
@@ -455,6 +458,9 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                   }
                   return null;
                 },
+                keyboardType: TextInputType.text,
+                enableInteractiveSelection: true,
+                enableSuggestions: true,
               ),
               const SizedBox(height: 16),
 
@@ -533,6 +539,10 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                   return null;
                 },
                 maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                enableInteractiveSelection: true,
+                enableSuggestions: true,
+                textInputAction: TextInputAction.newline,
               ),
 
               // 저장 버튼
