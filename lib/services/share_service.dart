@@ -15,7 +15,7 @@ class ShareService {
 
   /// 기본 공유 URL (GitHub Pages)
   static const String baseShareUrl =
-      'https://yoonucho.github.io/flutter-card-talk/share.html?id=';
+      'https://yoonucho.github.io/flutter-card-talk/share.html';
 
   /// 싱글톤 패턴 구현
   /// 항상 같은 인스턴스를 반환하도록 팩토리 생성자 사용
@@ -68,7 +68,7 @@ class ShareService {
       final encodedData = base64Encode(utf8.encode(jsonEncode(urlData)));
 
       // 공유 링크 생성
-      final shareLink = '$baseShareUrl$uuid&data=$encodedData';
+      final shareLink = '${baseShareUrl}?id=$uuid&data=$encodedData';
 
       return shareLink;
     } catch (e) {
