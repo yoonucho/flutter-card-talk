@@ -66,9 +66,12 @@ class ShareService {
 
       // 데이터를 Base64로 인코딩
       final encodedData = base64Encode(utf8.encode(jsonEncode(urlData)));
-      
+
       // URL 안전하게 인코딩 (+ → -, / → _, = 제거)
-      final urlSafeData = encodedData.replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+      final urlSafeData = encodedData
+          .replaceAll('+', '-')
+          .replaceAll('/', '_')
+          .replaceAll('=', '');
 
       // 공유 링크 생성
       final shareLink = '${baseShareUrl}?id=$uuid&data=$urlSafeData';

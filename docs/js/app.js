@@ -84,12 +84,12 @@ function loadCardData(shareId) {
     if (encodedData) {
       try {
         // URL 안전 Base64를 표준 Base64로 변환 (- → +, _ → /, 패딩 추가)
-        let base64Data = encodedData.replace(/-/g, '+').replace(/_/g, '/');
+        let base64Data = encodedData.replace(/-/g, "+").replace(/_/g, "/");
         // 패딩 추가
         while (base64Data.length % 4) {
-          base64Data += '=';
+          base64Data += "=";
         }
-        
+
         // Base64 디코딩 및 JSON 파싱
         const jsonData = atob(base64Data);
         const cardData = JSON.parse(jsonData);
