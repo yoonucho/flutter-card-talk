@@ -150,9 +150,12 @@ function loadCardData(shareId) {
 
     if (encodedData) {
       try {
+        console.log("원본 인코딩 데이터:", encodedData);
+        
         // URL 디코딩 먼저 수행
         const urlDecoded = decodeURIComponent(encodedData);
-
+        console.log("URL 디코딩 후:", urlDecoded);
+        
         // URL 안전 Base64를 표준 Base64로 변환 (- → +, _ → /, 패딩 추가)
         let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
         // 패딩 추가
@@ -165,13 +168,29 @@ function loadCardData(shareId) {
         // UTF-8 지원 Base64 디코딩 및 JSON 파싱
         const jsonData = base64ToUtf8(base64Data);
         console.log("디코딩 결과:", jsonData);
-        const cardData = JSON.parse(jsonData);
-
-        // 카드 데이터 표시
-        displayCard(cardData);
+        
+        // JSON 파싱 전에 유효성 검사
+        if (!jsonData || jsonData.trim() === "") {
+          throw new Error("디코딩된 데이터가 비어있습니다.");
+        }
+        
+        try {
+          const cardData = JSON.parse(jsonData);
+          
+          // 필수 필드 확인
+          if (!cardData.name && !cardData.message) {
+            throw new Error("카드 데이터 형식이 올바르지 않습니다.");
+          }
+          
+          // 카드 데이터 표시
+          displayCard(cardData);
+        } catch (jsonError) {
+          console.error("JSON 파싱 오류:", jsonError);
+          throw new Error("카드 데이터 형식이 올바르지 않습니다: " + jsonError.message);
+        }
       } catch (decodeError) {
         console.error("데이터 디코딩 오류:", decodeError);
-        displayDefaultCard(shareId);
+        showError("카드 정보를 불러오는데 실패했습니다: " + decodeError.message);
       }
     } else {
       // 데이터가 없는 경우 기본 카드 표시
