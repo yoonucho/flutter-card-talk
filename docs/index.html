@@ -1,142 +1,169 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>카드톡 - 감성 카드 제작 및 공유 앱</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
-  <meta property="og:title" content="카드톡 - 감성 카드 제작 및 공유 앱" />
-  <meta property="og:description" content="소중한 사람들에게 감성 카드를 만들어 보내보세요." />
-  <meta property="og:image" content="https://yoonucho.github.io/flutter-card-talk/images/card_preview.jpg" />
-  <style>
-    body {
-      background-color: #fff;
-    }
-    .app-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-    .app-header {
-      text-align: center;
-      margin-bottom: 60px;
-    }
-    .app-title {
-      font-size: 36px;
-      font-weight: 700;
-      color: #e91e63;
-      margin-bottom: 16px;
-    }
-    .app-subtitle {
-      font-size: 18px;
-      color: #666;
-    }
-    .feature-section {
-      margin-bottom: 60px;
-    }
-    .section-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .features {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 30px;
-    }
-    .feature-card {
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      padding: 24px;
-      width: 300px;
-      text-align: center;
-    }
-    .feature-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-    .feature-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #e91e63;
-      margin-bottom: 12px;
-    }
-    .feature-desc {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.6;
-    }
-    .download-section {
-      text-align: center;
-      margin-bottom: 60px;
-    }
-    .download-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 24px;
-    }
-    .download-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-    .footer {
-      text-align: center;
-      padding: 20px;
-      color: #888;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="app-container">
-    <div class="app-header">
-      <div class="app-title">카드톡</div>
-      <div class="app-subtitle">감성 카드를 쉽게 만들어 소중한 사람들과 공유하세요</div>
-    </div>
-
-    <div class="feature-section">
-      <div class="section-title">주요 기능</div>
-      <div class="features">
-        <div class="feature-card">
-          <div class="feature-icon">💌</div>
-          <div class="feature-title">다양한 템플릿</div>
-          <div class="feature-desc">사랑, 축하, 생일, 위로, 우정, 감사 등 다양한 감정을 담은 템플릿을 제공합니다.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">✏️</div>
-          <div class="feature-title">개인 메시지</div>
-          <div class="feature-desc">카드에 나만의 특별한 메시지를 추가하여 마음을 전달하세요.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔗</div>
-          <div class="feature-title">간편한 공유</div>
-          <div class="feature-desc">만든 카드를 링크로 공유하여 소중한 사람들에게 쉽게 전달할 수 있습니다.</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>카드톡 - 감성 카드 제작 및 공유 앱</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <meta property="og:title" content="카드톡 - 감성 카드 제작 및 공유 앱" />
+    <meta
+      property="og:description"
+      content="소중한 사람들에게 감성 카드를 만들어 보내보세요."
+    />
+    <!-- <meta
+      property="og:image"
+      content="https://yoonucho.github.io/flutter-card-talk/images/card_preview.jpg"
+    /> -->
+    <style>
+      body {
+        background-color: #fff;
+      }
+      .app-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .app-header {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+      .app-title {
+        font-size: 36px;
+        font-weight: 700;
+        color: #e91e63;
+        margin-bottom: 16px;
+      }
+      .app-subtitle {
+        font-size: 18px;
+        color: #666;
+      }
+      .feature-section {
+        margin-bottom: 60px;
+      }
+      .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+      .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+      }
+      .feature-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        width: 300px;
+        text-align: center;
+      }
+      .feature-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      .feature-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #e91e63;
+        margin-bottom: 12px;
+      }
+      .feature-desc {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.6;
+      }
+      .download-section {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+      .download-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 24px;
+      }
+      .download-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      .footer {
+        text-align: center;
+        padding: 20px;
+        color: #888;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="app-header">
+        <div class="app-title">카드톡</div>
+        <div class="app-subtitle">
+          감성 카드를 쉽게 만들어 소중한 사람들과 공유하세요
         </div>
       </div>
-    </div>
 
-    <div class="download-section">
-      <div class="download-title">지금 다운로드하세요</div>
-      <div class="download-buttons">
-        <a href="https://play.google.com/store" target="_blank">
-          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/ko_badge_web_generic.png" alt="Google Play에서 다운로드" height="60">
-        </a>
-        <a href="https://apps.apple.com" target="_blank">
-          <img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store-kr.svg" alt="App Store에서 다운로드" height="60">
-        </a>
+      <div class="feature-section">
+        <div class="section-title">주요 기능</div>
+        <div class="features">
+          <div class="feature-card">
+            <div class="feature-icon">💌</div>
+            <div class="feature-title">다양한 템플릿</div>
+            <div class="feature-desc">
+              사랑, 축하, 생일, 위로, 우정, 감사 등 다양한 감정을 담은 템플릿을
+              제공합니다.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">✏️</div>
+            <div class="feature-title">개인 메시지</div>
+            <div class="feature-desc">
+              카드에 나만의 특별한 메시지를 추가하여 마음을 전달하세요.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <div class="feature-title">간편한 공유</div>
+            <div class="feature-desc">
+              만든 카드를 링크로 공유하여 소중한 사람들에게 쉽게 전달할 수
+              있습니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="download-section">
+        <div class="download-title">지금 다운로드하세요</div>
+        <div class="download-buttons">
+          <a href="https://play.google.com/store" target="_blank">
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/ko_badge_web_generic.png"
+              alt="Google Play에서 다운로드"
+              height="60"
+            />
+          </a>
+          <a href="https://apps.apple.com" target="_blank">
+            <img
+              src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store-kr.svg"
+              alt="App Store에서 다운로드"
+              height="60"
+            />
+          </a>
+        </div>
+      </div> -->
+
+      <div class="footer">
+        <p>© 2023 카드톡. All rights reserved.</p>
       </div>
     </div>
-
-    <div class="footer">
-      <p>© 2023 카드톡. All rights reserved.</p>
-    </div>
-  </div>
-</body>
+  </body>
 </html>
