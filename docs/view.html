@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>특별한 카드가 도착했어요</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <meta property="og:title" content="특별한 카드가 도착했어요!" />
+    <meta
+      property="og:description"
+      content="카드톡으로 보낸 특별한 카드를 확인해보세요."
+    />
+    <meta
+      property="og:image"
+      content="https://[사용자명].github.io/[레포지토리명]/images/card_preview.jpg"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- 인트로 화면 -->
+      <div class="intro-container" id="intro">
+        <div class="intro-text" id="introText">특별한 카드가 도착했어요!</div>
+        <div class="intro-subtext" id="introSubtext">
+          아래 버튼을 눌러 확인하세요
+        </div>
+        <button class="intro-button" id="introButton">❤️</button>
+      </div>
+
+      <!-- 카드 화면 -->
+      <div class="card-container" id="cardContainer">
+        <!-- 로딩 상태 -->
+        <div id="loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 20px; color: #666">
+            카드 정보를 불러오는 중입니다...
+          </p>
+        </div>
+
+        <!-- 오류 상태 -->
+        <div id="error" style="display: none">
+          <div class="error-icon">⚠️</div>
+          <h3>카드를 불러올 수 없습니다</h3>
+          <p id="errorMessage">카드 정보를 불러오는데 실패했습니다.</p>
+          <button
+            onclick="location.reload()"
+            class="button"
+            style="margin-top: 20px"
+          >
+            다시 시도
+          </button>
+        </div>
+
+        <!-- 카드 내용 -->
+        <div id="card" class="card" style="display: none">
+          <div id="emoji" class="emoji">💌</div>
+          <div id="title" class="title">카드 제목</div>
+          <div id="message" class="message">카드 메시지</div>
+          <div class="footer">
+            <p>소중한 마음이 담긴 카드입니다</p>
+          </div>
+        </div>
+
+        <!-- 앱 다운로드 안내 -->
+        <div style="margin-top: 30px; text-align: center">
+          <p style="margin-bottom: 10px; font-size: 14px; color: #666">
+            카드톡 앱으로 더 많은 카드를 만들어보세요
+          </p>
+          <div>
+            <a
+              href="https://play.google.com/store"
+              target="_blank"
+              style="margin-right: 10px; display: inline-block"
+            >
+              <img
+                src="https://play.google.com/intl/en_us/badges/static/images/badges/ko_badge_web_generic.png"
+                alt="Google Play에서 다운로드"
+                height="40"
+              />
+            </a>
+            <a
+              href="https://apps.apple.com"
+              target="_blank"
+              style="display: inline-block"
+            >
+              <img
+                src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store-kr.svg"
+                alt="App Store에서 다운로드"
+                height="40"
+              />
+            </a>
+          </div>
+        </div>
+
+        <!-- 로고 -->
+        <div class="logo">
+          <span>카드톡으로 제작된 카드입니다</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
