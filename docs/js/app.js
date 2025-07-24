@@ -79,22 +79,61 @@ function base64ToUtf8(base64) {
   try {
     console.log("Base64 디코딩 시작:", base64);
     
-    // Base64를 바이너리 문자열로 디코딩
-    const binaryString = atob(base64);
-    console.log("바이너리 문자열 길이:", binaryString.length);
-    
-    // 바이너리 문자열을 Uint8Array로 변환
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // 방법 1: TextDecoder 사용
+    try {
+      // Base64를 바이너리 문자열로 디코딩
+      const binaryString = atob(base64);
+      console.log("바이너리 문자열 길이:", binaryString.length);
+      
+      // 바이너리 문자열을 Uint8Array로 변환
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      console.log("Uint8Array 생성 완료:", bytes.length);
+      
+      // TextDecoder를 사용하여 UTF-8로 디코딩
+      const decoder = new TextDecoder('utf-8');
+      const result = decoder.decode(bytes);
+      console.log("TextDecoder 디코딩 결과:", result);
+      return result;
+    } catch (textDecoderError) {
+      console.error("TextDecoder 오류:", textDecoderError);
+      
+      // 방법 2: 수동 디코딩 시도
+      try {
+        const binaryString = atob(base64);
+        let result = '';
+        let i = 0;
+        
+        while (i < binaryString.length) {
+          let c = binaryString.charCodeAt(i);
+          
+          if (c < 128) {
+            // ASCII 문자
+            result += String.fromCharCode(c);
+            i++;
+          } else if (c > 191 && c < 224) {
+            // 2바이트 문자
+            const c2 = binaryString.charCodeAt(i + 1);
+            result += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+            i += 2;
+          } else {
+            // 3바이트 문자
+            const c2 = binaryString.charCodeAt(i + 1);
+            const c3 = binaryString.charCodeAt(i + 2);
+            result += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+            i += 3;
+          }
+        }
+        
+        console.log("수동 디코딩 결과:", result);
+        return result;
+      } catch (manualError) {
+        console.error("수동 디코딩 오류:", manualError);
+        throw manualError;
+      }
     }
-    console.log("Uint8Array 생성 완료:", bytes.length);
-    
-    // TextDecoder를 사용하여 UTF-8로 디코딩
-    const decoder = new TextDecoder('utf-8');
-    const result = decoder.decode(bytes);
-    console.log("UTF-8 디코딩 결과:", result);
-    return result;
   } catch (e) {
     console.error("Base64 디코딩 오류:", e);
     console.error("오류 스택:", e.stack);
