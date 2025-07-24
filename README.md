@@ -5,6 +5,7 @@
 ## 프로젝트 구조
 
 카드톡은 다양한 템플릿을 활용하여 사랑, 축하, 생일, 위로, 우정, 감사 등 여러 감정을 담은 디지털 카드를 만들고 공유할 수 있는 앱입니다. 사용자 친화적인 인터페이스와 다양한 커스터마이징 옵션을 제공합니다.
+
 ```
 test/
 ├── lib/                      # 앱 소스 코드
@@ -122,40 +123,9 @@ git push origin main
 5. 앱 빌드 및 배포
 
 ```bash
-# Android APK 빌드
 flutter build apk --release
-
-# Android App Bundle 빌드 (Google Play 스토어 배포용)
-flutter build appbundle --release
-
-# iOS 빌드
 flutter build ios --release
-
-# iOS 앱 배포 준비 (Xcode에서 Archive 생성)
-open ios/Runner.xcworkspace
 ```
-
-### 스토어 배포
-
-#### Google Play 스토어 배포
-1. Google Play Console(https://play.google.com/console)에 로그인
-2. 새 앱 만들기 또는 기존 앱 선택
-3. App Bundle(aab 파일) 업로드
-   - `build/app/outputs/bundle/release/app-release.aab` 파일 사용
-4. 스토어 등록정보 작성 (앱 설명, 스크린샷, 아이콘 등)
-5. 개인정보처리방침 URL 제공
-6. 앱 출시 관리에서 출시 트랙 선택 (내부 테스트, 비공개 테스트, 공개 테스트, 프로덕션)
-
-#### Apple App Store 배포
-1. Apple Developer 계정으로 App Store Connect(https://appstoreconnect.apple.com)에 로그인
-2. 새 앱 등록 또는 기존 앱 선택
-3. Xcode에서 Archive 생성 후 업로드
-   - Xcode > Product > Archive
-   - Validate App
-   - Distribute App > App Store Connect
-4. App Store Connect에서 앱 정보 작성 (설명, 스크린샷, 아이콘 등)
-5. 개인정보처리방침 URL 제공
-6. TestFlight를 통한 테스트 또는 심사 제출
 
 ## 카드 공유 작동 방식
 

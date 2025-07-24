@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Base64 URL 인코딩/디코딩 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Base64 URL 인코딩/디코딩 테스트</h1>
+
+      <h2>1. 원본 JSON 데이터</h2>
+      <textarea id="jsonInput">
+{"name":"테스트 카드","emoji":"💌","message":"안녕하세요! 테스트 메시지입니다.","backgroundColor":"#fce4ec","textColor":"#c2185b"}</textarea
+      >
+
+      <h2>2. Base64 인코딩</h2>
+      <button onclick="encodeBase64()">Base64 인코딩</button>
+      <div class="result" id="base64Result"></div>
+
+      <h2>3. URL 안전 인코딩</h2>
+      <button onclick="makeUrlSafe()">URL 안전하게 변환</button>
+      <div class="result" id="urlSafeResult"></div>
+
+      <h2>4. URL 디코딩</h2>
+      <textarea id="urlInput"></textarea>
+      <button onclick="decodeUrl()">URL 디코딩</button>
+      <div class="result" id="urlDecodedResult"></div>
+
+      <h2>5. Base64 디코딩</h2>
+      <button onclick="decodeBase64()">Base64 디코딩</button>
+      <div class="result" id="decodedResult"></div>
+    </div>
+
+    <script>
+      // Base64 인코딩
+      function encodeBase64() {
+        const jsonData = document.getElementById("jsonInput").value;
+        const encoded = btoa(jsonData);
+        document.getElementById("base64Result").textContent = encoded;
+        return encoded;
+      }
+
+      // URL 안전하게 변환
+      function makeUrlSafe() {
+        const base64 =
+          document.getElementById("base64Result").textContent || encodeBase64();
+        // 1. Flutter 방식 (replaceAll)
+        // const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+        // 2. encodeURIComponent 방식
+        const urlSafe = encodeURIComponent(base64);
+
+        document.getElementById("urlSafeResult").textContent = urlSafe;
+        document.getElementById("urlInput").value = urlSafe;
+        return urlSafe;
+      }
+
+      // URL 디코딩
+      function decodeUrl() {
+        const urlData = document.getElementById("urlInput").value;
+        try {
+          const decoded = decodeURIComponent(urlData);
+          document.getElementById("urlDecodedResult").textContent = decoded;
+          return decoded;
+        } catch (e) {
+          document.getElementById("urlDecodedResult").textContent =
+            "오류: " + e.message;
+          return null;
+        }
+      }
+
+      // Base64 디코딩
+      function decodeBase64() {
+        const urlDecoded =
+          document.getElementById("urlDecodedResult").textContent ||
+          decodeUrl();
+        if (!urlDecoded || urlDecoded.startsWith("오류")) return;
+
+        try {
+          // URL 안전 Base64를 표준 Base64로 변환
+          let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
+          // 패딩 추가
+          while (base64Data.length % 4) {
+            base64Data += "=";
+          }
+
+          const jsonData = atob(base64Data);
+          document.getElementById("decodedResult").textContent = jsonData;
+
+          // JSON 파싱 테스트
+          const parsedData = JSON.parse(jsonData);
+          console.log("JSON 파싱 성공:", parsedData);
+        } catch (e) {
+          document.getElementById("decodedResult").textContent =
+            "오류: " + e.message;
+        }
+      }
+    </script>
+  </body>
+</html>
