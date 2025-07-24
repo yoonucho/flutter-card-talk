@@ -116,7 +116,7 @@ class LocalServer {
         <div class="message">카드톡 앱에서 확인해보세요.</div>
         <a href="cardtalk://share/$id" class="button">카드 열기 (앱)</a>
         <div style="margin-top: 20px;">
-          <a href="http://localhost:$port/view/$id" class="button" style="background-color: #4CAF50;">웹에서 보기</a>
+          <a href="https://yoonucho.github.io/flutter-card-talk/view.html?id=$id" class="button" style="background-color: #4CAF50;">웹에서 보기</a>
         </div>
       </div>
       <script>
@@ -128,7 +128,7 @@ class LocalServer {
           // 일정 시간 후에도 페이지가 여전히 열려있으면 앱이 설치되지 않은 것
           setTimeout(function() {
             // 웹 버전으로 이동
-            window.location.href = "http://localhost:$port/view/$id";
+            window.location.href = "https://yoonucho.github.io/flutter-card-talk/view.html?id=$id";
           }, 2000);
         }
         

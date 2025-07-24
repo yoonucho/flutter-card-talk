@@ -13,8 +13,9 @@ class ShareService {
   /// SharedPreferences 인스턴스
   late SharedPreferences _prefs;
 
-  /// 기본 공유 URL (로컬 서버)
-  static const String baseShareUrl = 'http://localhost:8080/view/';
+  /// 기본 공유 URL (GitHub Pages)
+  static const String baseShareUrl =
+      'https://yoonucho.github.io/flutter-card-talk/share.html?id=';
 
   /// 싱글톤 패턴 구현
   /// 항상 같은 인스턴스를 반환하도록 팩토리 생성자 사용
@@ -49,11 +50,25 @@ class ShareService {
         'createdAt': DateTime.now().toIso8601String(),
       };
 
-      // 데이터 저장
+      // 로컬 스토리지에 데이터 저장
       await _prefs.setString('share_$uuid', jsonEncode(shareData));
 
-      // 공유 링크 생성 (로컬 서버 URL 사용)
-      final shareLink = '$baseShareUrl$uuid';
+      // URL 파라미터로 전달할 간단한 데이터 생성
+      final urlData = {
+        'name': template.name,
+        'emoji': template.emoji,
+        'message': message,
+        'backgroundColor':
+            '#${template.backgroundColor.value.toRadixString(16).substring(2)}',
+        'textColor':
+            '#${template.textColor.value.toRadixString(16).substring(2)}',
+      };
+
+      // 데이터를 Base64로 인코딩
+      final encodedData = base64Encode(utf8.encode(jsonEncode(urlData)));
+
+      // 공유 링크 생성
+      final shareLink = '$baseShareUrl$uuid&data=$encodedData';
 
       return shareLink;
     } catch (e) {
