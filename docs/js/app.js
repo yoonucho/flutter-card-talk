@@ -74,6 +74,27 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Base64를 UTF-8 문자열로 디코딩하는 함수
+function base64ToUtf8(base64) {
+  try {
+    // Base64를 바이너리 문자열로 디코딩
+    const binaryString = atob(base64);
+    
+    // 바이너리 문자열을 Uint8Array로 변환
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // TextDecoder를 사용하여 UTF-8로 디코딩
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+  } catch (e) {
+    console.error("Base64 디코딩 오류:", e);
+    throw e;
+  }
+}
+
 // 카드 데이터 가져오기 함수
 function loadCardData(shareId) {
   try {
@@ -94,9 +115,9 @@ function loadCardData(shareId) {
         }
 
         console.log("디코딩 시도:", base64Data);
-
-        // Base64 디코딩 및 JSON 파싱
-        const jsonData = atob(base64Data);
+        
+        // UTF-8 지원 Base64 디코딩 및 JSON 파싱
+        const jsonData = base64ToUtf8(base64Data);
         console.log("디코딩 결과:", jsonData);
         const cardData = JSON.parse(jsonData);
 
