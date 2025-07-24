@@ -74,16 +74,15 @@ function loadCardData(shareId) {
 
     // URL 파라미터에서 카드 데이터 가져오기
     const encodedData = urlParams.get("data");
+    console.log("1. encodedData:", encodedData);
 
     if (encodedData) {
       try {
-        if (isDebug) console.log("원본 인코딩 데이터:", encodedData);
-
         // 1. URL 디코딩 (한 번만!)
         let urlDecoded;
         try {
           urlDecoded = decodeURIComponent(encodedData);
-          if (isDebug) console.log("URL 디코딩 후:", urlDecoded);
+          console.log("2. urlDecoded:", urlDecoded);
         } catch (urlError) {
           console.error("URL 디코딩 오류:", urlError);
           urlDecoded = encodedData; // URL 디코딩 실패 시 원본 사용
@@ -91,29 +90,26 @@ function loadCardData(shareId) {
 
         // 2. URL 안전 Base64를 표준 Base64로 변환
         let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
-        // 3. 패딩 추가 (4의 배수 길이로 맞춤)
-        while (base64Data.length % 4) {
-          base64Data += "=";
-        }
-        if (isDebug) console.log("Base64 디코딩 시도:", base64Data);
+        while (base64Data.length % 4) base64Data += "=";
+        console.log("3. base64Data:", base64Data);
 
-        // 4. js-base64로 디코딩
+        // 3. js-base64로 디코딩
         const jsonData = Base64.decode(base64Data);
-        if (isDebug) console.log("디코딩 결과:", jsonData);
+        console.log("4. jsonData:", jsonData);
 
-        // 5. JSON 파싱
+        // 4. JSON 파싱
         if (!jsonData || jsonData.trim() === "") {
           throw new Error("디코딩된 데이터가 비어있습니다.");
         }
         const cardData = JSON.parse(jsonData);
         if (isDebug) console.log("파싱된 카드 데이터:", cardData);
 
-        // 6. 필수 필드 확인
+        // 5. 필수 필드 확인
         if (!cardData.name && !cardData.message) {
           throw new Error("카드 데이터 형식이 올바르지 않습니다.");
         }
 
-        // 7. 카드 데이터 표시
+        // 6. 카드 데이터 표시
         displayCard(cardData);
       } catch (error) {
         console.error("카드 데이터 처리 오류:", error);
