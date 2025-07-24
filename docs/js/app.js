@@ -77,20 +77,27 @@ document.addEventListener("DOMContentLoaded", function () {
 // Base64를 UTF-8 문자열로 디코딩하는 함수
 function base64ToUtf8(base64) {
   try {
+    console.log("Base64 디코딩 시작:", base64);
+    
     // Base64를 바이너리 문자열로 디코딩
     const binaryString = atob(base64);
+    console.log("바이너리 문자열 길이:", binaryString.length);
     
     // 바이너리 문자열을 Uint8Array로 변환
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
+    console.log("Uint8Array 생성 완료:", bytes.length);
     
     // TextDecoder를 사용하여 UTF-8로 디코딩
     const decoder = new TextDecoder('utf-8');
-    return decoder.decode(bytes);
+    const result = decoder.decode(bytes);
+    console.log("UTF-8 디코딩 결과:", result);
+    return result;
   } catch (e) {
     console.error("Base64 디코딩 오류:", e);
+    console.error("오류 스택:", e.stack);
     throw e;
   }
 }
