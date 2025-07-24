@@ -82,19 +82,24 @@ function loadCardData(shareId) {
     const encodedData = urlParams.get("data");
 
     if (encodedData) {
-      // Base64 디코딩 및 JSON 파싱
-      const jsonData = atob(encodedData);
-      const cardData = JSON.parse(jsonData);
+      try {
+        // Base64 디코딩 및 JSON 파싱
+        const jsonData = atob(encodedData);
+        const cardData = JSON.parse(jsonData);
 
-      // 카드 데이터 표시
-      displayCard(cardData);
+        // 카드 데이터 표시
+        displayCard(cardData);
+      } catch (decodeError) {
+        console.error("데이터 디코딩 오류:", decodeError);
+        displayDefaultCard(shareId);
+      }
     } else {
       // 데이터가 없는 경우 기본 카드 표시
       displayDefaultCard(shareId);
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("카드 정보를 불러오는데 실패했습니다.");
+    showError("카드 정보를 불러오는데 실패했습니다: " + error.message);
   }
 }
 
@@ -103,7 +108,7 @@ function displayDefaultCard(shareId) {
   document.getElementById("emoji").textContent = "💌";
   document.getElementById("title").textContent = "특별한 카드";
   document.getElementById("message").textContent =
-    "카드 내용을 확인하려면 앱을 설치해주세요.";
+    "카드톡에서 보낸 특별한 카드입니다.\n카드를 확인하려면 카드톡 앱을 설치하거나 공유 링크를 통해 확인해주세요.";
 
   // 카드 스타일 설정
   const card = document.getElementById("card");
@@ -121,6 +126,7 @@ function displayDefaultCard(shareId) {
   setTimeout(() => {
     document.getElementById("card").classList.add("show");
     document.getElementById("cardContainer").classList.add("show");
+    createConfetti();
   }, 100);
 }
 
