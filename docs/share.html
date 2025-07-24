@@ -18,6 +18,99 @@
       property="og:image"
       content="https://yoonucho.github.io/flutter-card-talk/images/card_preview.jpg"
     /> -->
+
+    <!-- js-base64 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
+
+    <!-- TextEncoder/TextDecoder Polyfill -->
+    <script>
+      // TextEncoder/TextDecoder Polyfill for older browsers
+      if (
+        typeof TextEncoder === "undefined" ||
+        typeof TextDecoder === "undefined"
+      ) {
+        // Simple polyfill for TextEncoder
+        if (typeof TextEncoder === "undefined") {
+          window.TextEncoder = function TextEncoder() {};
+          TextEncoder.prototype.encode = function (str) {
+            var utf8 = [];
+            for (var i = 0; i < str.length; i++) {
+              var charcode = str.charCodeAt(i);
+              if (charcode < 0x80) utf8.push(charcode);
+              else if (charcode < 0x800) {
+                utf8.push(0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f));
+              } else if (charcode < 0xd800 || charcode >= 0xe000) {
+                utf8.push(
+                  0xe0 | (charcode >> 12),
+                  0x80 | ((charcode >> 6) & 0x3f),
+                  0x80 | (charcode & 0x3f)
+                );
+              }
+              // surrogate pair
+              else {
+                i++;
+                charcode =
+                  ((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff);
+                charcode += 0x10000;
+                utf8.push(
+                  0xf0 | (charcode >> 18),
+                  0x80 | ((charcode >> 12) & 0x3f),
+                  0x80 | ((charcode >> 6) & 0x3f),
+                  0x80 | (charcode & 0x3f)
+                );
+              }
+            }
+            return new Uint8Array(utf8);
+          };
+        }
+
+        // Simple polyfill for TextDecoder
+        if (typeof TextDecoder === "undefined") {
+          window.TextDecoder = function TextDecoder(utfLabel) {
+            this.utfLabel = utfLabel || "utf-8";
+          };
+          TextDecoder.prototype.decode = function (array) {
+            var out = "";
+            var len = array.length;
+            var i = 0;
+            while (i < len) {
+              var c = array[i++];
+              if (c < 128) {
+                // ASCII 문자
+                out += String.fromCharCode(c);
+              } else if (c > 191 && c < 224) {
+                // 2바이트 문자
+                var c2 = array[i++];
+                out += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+              } else if (c > 223 && c < 240) {
+                // 3바이트 문자
+                var c2 = array[i++];
+                var c3 = array[i++];
+                out += String.fromCharCode(
+                  ((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63)
+                );
+              } else {
+                // 4바이트 문자 (이모지 등)
+                var c2 = array[i++];
+                var c3 = array[i++];
+                var c4 = array[i++];
+                var codepoint =
+                  ((c & 7) << 18) |
+                  ((c2 & 63) << 12) |
+                  ((c3 & 63) << 6) |
+                  (c4 & 63);
+                codepoint -= 0x10000;
+                out += String.fromCharCode(
+                  (codepoint >> 10) + 0xd800,
+                  (codepoint & 0x3ff) + 0xdc00
+                );
+              }
+            }
+            return out;
+          };
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="container">

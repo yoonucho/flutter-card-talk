@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base64 디코딩 테스트</title>
+    <!-- js-base64 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
+    <style>
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        white-space: pre-wrap;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Base64 디코딩 테스트</h1>
+
+    <h2>테스트 데이터</h2>
+    <textarea id="base64Input">
+eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</textarea
+    >
+
+    <button onclick="testDecode()">디코딩 테스트</button>
+
+    <h2>결과</h2>
+    <div class="result" id="result"></div>
+
+    <script>
+      function testDecode() {
+        const resultDiv = document.getElementById("result");
+        const base64Input = document.getElementById("base64Input").value.trim();
+
+        resultDiv.innerHTML = "";
+
+        try {
+          // 1. js-base64 라이브러리 사용
+          try {
+            const jsBase64Result = Base64.decode(base64Input);
+            const jsBase64Json = JSON.parse(jsBase64Result);
+
+            resultDiv.innerHTML += "<h3>방법 1: js-base64 라이브러리</h3>";
+            resultDiv.innerHTML += "<p>디코딩 결과: " + jsBase64Result + "</p>";
+            resultDiv.innerHTML += "<p>JSON 파싱 결과:</p>";
+            resultDiv.innerHTML +=
+              "<pre>" + JSON.stringify(jsBase64Json, null, 2) + "</pre>";
+            resultDiv.innerHTML += "<p style='color:green'>✅ 성공</p>";
+          } catch (e) {
+            resultDiv.innerHTML += "<h3>방법 1: js-base64 라이브러리</h3>";
+            resultDiv.innerHTML +=
+              "<p style='color:red'>❌ 실패: " + e.message + "</p>";
+          }
+
+          // 2. 표준 atob() 사용
+          try {
+            const atobResult = atob(base64Input);
+            const atobJson = JSON.parse(atobResult);
+
+            resultDiv.innerHTML += "<h3>방법 2: 표준 atob()</h3>";
+            resultDiv.innerHTML += "<p>디코딩 결과: " + atobResult + "</p>";
+            resultDiv.innerHTML += "<p>JSON 파싱 결과:</p>";
+            resultDiv.innerHTML +=
+              "<pre>" + JSON.stringify(atobJson, null, 2) + "</pre>";
+            resultDiv.innerHTML += "<p style='color:green'>✅ 성공</p>";
+          } catch (e) {
+            resultDiv.innerHTML += "<h3>방법 2: 표준 atob()</h3>";
+            resultDiv.innerHTML +=
+              "<p style='color:red'>❌ 실패: " + e.message + "</p>";
+          }
+
+          // 3. escape/unescape 방식
+          try {
+            const escapeResult = decodeURIComponent(escape(atob(base64Input)));
+            const escapeJson = JSON.parse(escapeResult);
+
+            resultDiv.innerHTML += "<h3>방법 3: escape/unescape</h3>";
+            resultDiv.innerHTML += "<p>디코딩 결과: " + escapeResult + "</p>";
+            resultDiv.innerHTML += "<p>JSON 파싱 결과:</p>";
+            resultDiv.innerHTML +=
+              "<pre>" + JSON.stringify(escapeJson, null, 2) + "</pre>";
+            resultDiv.innerHTML += "<p style='color:green'>✅ 성공</p>";
+          } catch (e) {
+            resultDiv.innerHTML += "<h3>방법 3: escape/unescape</h3>";
+            resultDiv.innerHTML +=
+              "<p style='color:red'>❌ 실패: " + e.message + "</p>";
+          }
+        } catch (e) {
+          resultDiv.innerHTML =
+            "<p style='color:red'>오류 발생: " + e.message + "</p>";
+        }
+      }
+    </script>
+  </body>
+</html>
