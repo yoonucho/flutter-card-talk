@@ -21,6 +21,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // 카드 보기 페이지 설정
 function setupViewPage(shareId) {
+  // 카드 컨테이너를 처음부터 표시 가능하도록 설정
+  const cardContainer = document.getElementById("cardContainer");
+  if (cardContainer) {
+    cardContainer.style.display = "block";
+    cardContainer.style.opacity = "1";
+    cardContainer.style.visibility = "visible";
+  }
+
   // 인트로 화면 설정
   const introButton = document.getElementById("introButton");
   if (introButton) {
@@ -63,6 +71,14 @@ function setupDefaultPage() {
 // 카드 데이터 가져오기 함수
 function loadCardData(shareId) {
   try {
+    // 카드 컨테이너를 표시 상태로 설정
+    const cardContainer = document.getElementById("cardContainer");
+    if (cardContainer) {
+      cardContainer.style.display = "block";
+      cardContainer.style.opacity = "1";
+      cardContainer.style.visibility = "visible";
+    }
+
     // 디버그 모드 확인
     const urlParams = new URLSearchParams(window.location.search);
     const isDebug = urlParams.get("debug") === "true";
@@ -290,15 +306,90 @@ function displayCard(cardData) {
 
   // 카드 컨테이너 표시
   if (cardContainer) {
+    cardContainer.style.display = "block";
     cardContainer.style.opacity = "1";
+    cardContainer.style.visibility = "visible";
   }
 
-  // 카드 표시 및 애니메이션 적용
-  card.style.display = "block";
+  // 효과 컨테이너 확인
+  const effectsContainer = document.getElementById("effectsContainer");
+  if (!effectsContainer) {
+    // 효과 컨테이너가 없으면 생성
+    const newEffectsContainer = document.createElement("div");
+    newEffectsContainer.id = "effectsContainer";
+    newEffectsContainer.className = "effects-container";
+    document.body.prepend(newEffectsContainer);
+    console.log("효과 컨테이너 새로 생성됨");
+  } else {
+    console.log("기존 효과 컨테이너 사용");
+    // 효과 컨테이너가 있으면 스타일 확인
+    effectsContainer.style.position = "fixed";
+    effectsContainer.style.top = "0";
+    effectsContainer.style.left = "0";
+    effectsContainer.style.width = "100%";
+    effectsContainer.style.height = "100vh";
+    effectsContainer.style.zIndex = "30";
+    effectsContainer.style.pointerEvents = "none";
+    effectsContainer.style.overflow = "visible";
+  }
 
-  // 약간의 지연 후 애니메이션 클래스 추가
+  // 카드 표시 및 애니메이션 적용 (서서히 나타나는 효과)
+  card.style.display = "block";
+  card.style.visibility = "visible";
+  card.style.opacity = "0"; // 먼저 투명하게 시작
+
+  // 카드가 서서히 나타나는 애니메이션 적용
   setTimeout(() => {
+    // 애니메이션 클래스 추가
     card.classList.add("show");
+    card.style.transition =
+      "opacity 0.8s ease-in-out, transform 0.8s ease-in-out";
+    card.style.opacity = "1";
+    card.style.transform = "translateY(0) scale(1)";
+    console.log("카드 애니메이션 시작");
+
+    // 카테고리에 따라 다른 효과 적용
+    setTimeout(() => {
+      try {
+        // 카드 정보 로그 출력
+        console.log("카드 정보:", {
+          제목: cardData.name || "없음",
+          메시지: cardData.message
+            ? cardData.message.substring(0, 20) + "..."
+            : "없음",
+          이모지: cardData.emoji || "없음",
+        });
+
+        // 카테고리 판별 - 특정 템플릿 이름 기반으로 판별
+        const category = determineCategory(cardData);
+        console.log("카드 카테고리:", category);
+
+        // 디버깅: 효과 컨테이너 확인
+        const effectsContainer = document.getElementById("effectsContainer");
+        console.log("효과 컨테이너:", effectsContainer);
+
+        // 카드 컨테이너 구조 확인
+        const cardContainer = document.getElementById("cardContainer");
+        console.log("카드 컨테이너:", cardContainer);
+
+        // 카테고리별 효과 적용
+        if (category === "love") {
+          console.log(
+            "사랑 템플릿 확인: 하트 효과 적용 (사랑고백, 연인에게, 로맨틱)"
+          );
+          createHeartEffect();
+          console.log("하트 효과 시작");
+        } else {
+          console.log(
+            "일반 템플릿 확인: 색종이 효과 적용 (사랑 템플릿이 아님)"
+          );
+          createConfettiEffect();
+          console.log("색종이 효과 시작");
+        }
+      } catch (error) {
+        console.error("애니메이션 효과 적용 중 오류:", error);
+      }
+    }, 300);
   }, 100);
 }
 
@@ -352,4 +443,272 @@ function showError(message) {
     errorMessageElement.textContent = userFriendlyMessage;
   }
   errorElement.style.display = "block";
+}
+
+// 카드 카테고리 판별 함수
+function determineCategory(cardData) {
+  console.log("카드 카테고리 판별 시작:", cardData.name);
+
+  // 특정 사랑 템플릿 이름을 확인 (사랑고백, 연인에게, 로맨틱)
+  const loveTemplates = ["사랑고백", "연인에게", "로맨틱"];
+
+  // 템플릿 이름으로 확인
+  if (cardData.name) {
+    const templateName = cardData.name.trim();
+    console.log("템플릿 이름 확인:", templateName);
+
+    // 특정 템플릿 이름이 포함되어 있으면 하트 효과 적용
+    for (const loveTemplate of loveTemplates) {
+      if (templateName.includes(loveTemplate)) {
+        console.log(`사랑 템플릿 '${loveTemplate}' 확인됨:`, templateName);
+        return "love";
+      }
+    }
+  }
+
+  // 사랑 템플릿이 아닌 경우를 위한 다른 정보 (참고용)
+  const loveKeywords = [
+    "사랑",
+    "love",
+    "♥",
+    "❤",
+    "💕",
+    "💓",
+    "💗",
+    "💖",
+    "💘",
+    "💝",
+    "♡",
+    "❣️",
+  ];
+  const loveEmojis = [
+    "❤️",
+    "💕",
+    "💓",
+    "💗",
+    "💖",
+    "💘",
+    "💝",
+    "♥️",
+    "♡",
+    "😍",
+    "😘",
+    "💑",
+    "💏",
+    "👩‍❤️‍👨",
+    "👩‍❤️‍👩",
+    "👨‍❤️‍👨",
+  ];
+  const loveBgColors = [
+    "#ffccd5",
+    "#fadadd",
+    "#ffb6c1",
+    "#ff69b4",
+    "#fc89ac",
+    "#e91e63",
+  ];
+
+  // 이미 위에서 템플릿 이름으로 확인을 했으므로 여기서는 더 이상 확인할 필요 없음
+  // 기본값은 일반 카테고리 (사랑고백, 연인에게, 로맨틱 템플릿이 아님)
+  console.log(
+    "일반 카테고리로 판별됨 (사랑고백, 연인에게, 로맨틱 템플릿이 아님)"
+  );
+  return "general";
+}
+
+// 하트 효과 생성 함수
+function createHeartEffect() {
+  try {
+    console.log("===== ❤️ 하트 효과 생성 시작 =====");
+    console.log("하트 효과는 사랑고백, 연인에게, 로맨틱 템플릿에만 적용됩니다");
+
+    // 효과 컨테이너 확보 (없으면 body에 새로 생성)
+    let effectsContainer = document.getElementById("effectsContainer");
+    if (!effectsContainer) {
+      console.log("효과 컨테이너가 없어 새로 생성합니다");
+
+      effectsContainer = document.createElement("div");
+      effectsContainer.id = "effectsContainer";
+      effectsContainer.className = "effects-container";
+      // body에 직접 추가 (z-index가 올바르게 적용되도록)
+      document.body.prepend(effectsContainer);
+      console.log("새 효과 컨테이너 생성됨 (body에 추가됨)");
+
+      // z-index 확인 및 설정
+      effectsContainer.style.zIndex = "30";
+      console.log("효과 컨테이너 z-index:", effectsContainer.style.zIndex);
+    }
+
+    const count = 20; // 하트 개수
+    console.log(`${count}개의 하트 생성 시작`);
+
+    for (let i = 0; i < count; i++) {
+      // 하트 요소 생성
+      const heart = document.createElement("div");
+      heart.className = "heart";
+
+      // 랜덤 위치 및 크기 설정
+      const size = Math.random() * 20 + 10;
+      heart.style.width = `${size}px`;
+      heart.style.height = `${size}px`;
+
+      // 애니메이션 변수 설정
+      const randomX = Math.random() * 200 - 100;
+      const randomRotate = Math.random() * 60 - 30;
+      heart.style.setProperty("--random-x", `${randomX}px`);
+      heart.style.setProperty("--random-rotate", `${randomRotate}deg`);
+
+      // 위치 설정
+      const containerRect = effectsContainer.getBoundingClientRect();
+      const leftPosition = Math.random() * containerRect.width;
+      const topPosition = containerRect.height - 50 + Math.random() * 80; // 하단에서 시작
+
+      heart.style.left = `${leftPosition}px`;
+      heart.style.top = `${topPosition}px`;
+
+      // 애니메이션 직접 적용
+      const duration = Math.random() * 3 + 4; // 4~7초
+      const delay = Math.random() * 4;
+
+      heart.style.animation = `float-heart ${duration}s ease-in-out ${delay}s forwards`;
+
+      // 하트 색상 다양화
+      const colors = ["#ff4081", "#e91e63", "#f06292", "#ec407a", "#ff80ab"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      heart.style.backgroundColor = color;
+
+      // 효과 컨테이너에 추가
+      effectsContainer.appendChild(heart);
+
+      // 애니메이션 시작 시 로그
+      if (i === 0) {
+        console.log("첫 번째 하트 추가됨:", heart);
+      }
+
+      // 애니메이션 종료 후 제거
+      setTimeout(() => {
+        if (heart.parentNode === effectsContainer) {
+          heart.remove();
+        }
+      }, (duration + delay) * 1000);
+    }
+
+    // 주기적으로 새 하트 추가
+    setTimeout(() => {
+      if (document.body.contains(document.getElementById("cardContainer"))) {
+        createHeartEffect();
+      }
+    }, 5000);
+  } catch (error) {
+    console.error("하트 효과 생성 중 오류:", error);
+  }
+}
+
+// 색종이(팡파레) 효과 생성 함수
+function createConfettiEffect() {
+  try {
+    console.log("===== 🎊 색종이 효과 생성 시작 =====");
+    console.log(
+      "색종이 효과는 일반 템플릿에 적용됩니다 (사랑고백, 연인에게, 로맨틱 제외)"
+    );
+
+    // 효과 컨테이너 확보 (없으면 body에 새로 생성)
+    let effectsContainer = document.getElementById("effectsContainer");
+    if (!effectsContainer) {
+      console.log("효과 컨테이너가 없어 새로 생성합니다");
+
+      effectsContainer = document.createElement("div");
+      effectsContainer.id = "effectsContainer";
+      effectsContainer.className = "effects-container";
+      // body에 직접 추가 (z-index가 올바르게 적용되도록)
+      document.body.prepend(effectsContainer);
+      console.log("새 효과 컨테이너 생성됨 (body에 추가됨)");
+
+      // z-index 확인 및 설정
+      effectsContainer.style.zIndex = "30";
+      console.log("효과 컨테이너 z-index:", effectsContainer.style.zIndex);
+    }
+
+    const count = 40; // 색종이 개수
+    console.log(`${count}개의 색종이 생성 시작`);
+
+    const colors = [
+      "#fd6c6c",
+      "#5ec9f5",
+      "#ffeb3b",
+      "#43e97b",
+      "#a35cff",
+      "#ff9f43",
+      "#64b5f6",
+      "#4caf50",
+      "#9c27b0",
+    ];
+
+    for (let i = 0; i < count; i++) {
+      // 색종이 요소 생성
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+
+      // 랜덤 크기, 모양, 색상 설정
+      const size = Math.random() * 10 + 6;
+      confetti.style.width = `${size}px`;
+      confetti.style.height = `${size}px`;
+
+      // 랜덤 색상
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.backgroundColor = color;
+
+      // 애니메이션 변수 설정
+      const randomX = Math.random() * 200 - 100;
+      confetti.style.setProperty("--random-x", `${randomX}px`);
+
+      // 다양한 모양 (원형, 다이아몬드, 사각형)
+      const shapeType = Math.random();
+      if (shapeType > 0.7) {
+        confetti.style.borderRadius = "50%"; // 원형
+      } else if (shapeType > 0.4) {
+        confetti.style.transform = "rotate(45deg)"; // 다이아몬드
+      }
+
+      // 위치 설정 (화면 상단에서 시작)
+      const containerRect = effectsContainer.getBoundingClientRect();
+      const leftPosition = Math.random() * containerRect.width;
+      const topPosition = -size - Math.random() * 60; // 화면 위에서 시작
+
+      confetti.style.left = `${leftPosition}px`;
+      confetti.style.top = `${topPosition}px`;
+
+      // 애니메이션 직접 적용
+      const duration = Math.random() * 3 + 3; // 3~6초
+      const delay = Math.random() * 3;
+      confetti.style.animation = `fall-confetti ${duration}s ease-in-out ${delay}s forwards`;
+
+      // 초기 투명도 설정
+      confetti.style.opacity = "0";
+
+      // 효과 컨테이너에 추가
+      effectsContainer.appendChild(confetti);
+
+      // 애니메이션 시작 시 로그
+      if (i === 0) {
+        console.log("첫 번째 색종이 추가됨:", confetti);
+      }
+
+      // 애니메이션 종료 후 제거
+      setTimeout(() => {
+        if (confetti.parentNode === effectsContainer) {
+          confetti.remove();
+        }
+      }, (duration + delay) * 1000);
+    }
+
+    // 주기적으로 새 색종이 추가
+    setTimeout(() => {
+      if (document.body.contains(document.getElementById("cardContainer"))) {
+        createConfettiEffect();
+      }
+    }, 5000);
+  } catch (error) {
+    console.error("색종이 효과 생성 중 오류:", error);
+  }
 }
