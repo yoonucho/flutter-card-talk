@@ -6,13 +6,16 @@
 }
 
 body {
-  font-family: "Noto Sans KR", sans-serif;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "맑은 고딕", "Dotum", "돋움", sans-serif;
   background-color: #ffccd5;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -83,7 +86,6 @@ body {
   font-weight: 700;
   color: #e91e63;
   margin-bottom: 40px;
-  opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
@@ -97,7 +99,6 @@ body {
   font-size: 16px;
   color: #666;
   margin-bottom: 30px;
-  opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
@@ -165,17 +166,34 @@ body {
   position: relative;
   overflow: hidden;
   transition: all 0.5s ease;
+  z-index: 5; /* z-index 추가 */
 }
 
 .card.show {
   transform: translateY(0);
   opacity: 1;
+  visibility: visible; /* 가시성 명시적으로 설정 */
 }
 
 .emoji {
   font-size: 72px;
   margin-bottom: 24px;
   display: inline-block;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    "Twemoji Mozilla", "Android Emoji", sans-serif;
+  line-height: 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: "liga";
+  -moz-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  /* 이모지 표시 개선 */
+  transform: scale(1);
+  transition: transform 0.3s ease;
+  opacity: 1;
+  animation: emoji-appear 0.6s ease-out;
+  z-index: 10; /* z-index 추가 */
+  position: relative; /* 위치 지정 */
+  visibility: visible; /* 가시성 명시적으로 설정 */
 }
 
 .title {
@@ -183,6 +201,16 @@ body {
   font-weight: 700;
   color: #e91e63;
   margin-bottom: 24px;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "맑은 고딕", sans-serif;
+  word-break: keep-all;
+  line-height: 1.4;
+  /* 타이틀 표시 개선 */
+  animation: text-appear 0.8s ease-out;
+  opacity: 1;
+  z-index: 10; /* z-index 추가 */
+  position: relative; /* 위치 지정 */
+  visibility: visible; /* 가시성 명시적으로 설정 */
 }
 
 .message {
@@ -190,6 +218,16 @@ body {
   line-height: 1.8;
   margin-bottom: 30px;
   white-space: pre-wrap;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    "맑은 고딕", sans-serif;
+  word-break: keep-all;
+  /* 메시지 표시 개선 */
+  animation: text-appear 1s ease-out;
+  opacity: 1;
+  z-index: 10; /* z-index 추가 */
+  position: relative; /* 위치 지정 */
+  visibility: visible; /* 가시성 명시적으로 설정 */
+  color: #333333; /* 색상 명시적으로 설정 */
 }
 
 .footer {
@@ -225,6 +263,32 @@ body {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* 추가 애니메이션 */
+@keyframes emoji-appear {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes text-appear {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 

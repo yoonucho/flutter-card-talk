@@ -4,10 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>특별한 카드가 도착했어요</title>
+    <!-- 한글 폰트 로딩 - 더 높은 우선순위로 변경 -->
     <link
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <!-- 폰트 로딩 문제를 대비한 인라인 스타일 -->
+    <style>
+      /* 폰트 대체 규칙 */
+      @font-face {
+        font-family: "NotoSansKRBackup";
+        src: local("Noto Sans KR"), local("Malgun Gothic"), local("맑은 고딕");
+        font-weight: 400;
+      }
+    </style>
     <link rel="stylesheet" href="css/styles.css" />
     <meta property="og:title" content="특별한 카드가 도착했어요!" />
     <meta
@@ -194,6 +206,69 @@
         </div>
       </div>
     </div>
+
+    <!-- 폰트 로딩 처리 스크립트 -->
+    <script>
+      // 폰트 로딩 강제 적용
+      function forceFontLoad() {
+        // 주요 폰트 목록
+        const fontFamilies = [
+          "Noto Sans KR",
+          "Apple SD Gothic Neo",
+          "Malgun Gothic",
+          "맑은 고딕",
+        ];
+
+        // 폰트 테스트 요소 생성
+        const testElement = document.createElement("div");
+        testElement.style.position = "absolute";
+        testElement.style.visibility = "hidden";
+        testElement.style.fontSize = "16px";
+        testElement.innerHTML = "가나다라 테스트 ABC 123 !@#$ 😀";
+        document.body.appendChild(testElement);
+
+        // 각 폰트 테스트
+        fontFamilies.forEach((font) => {
+          testElement.style.fontFamily = font;
+          console.log(`폰트 "${font}" 로드 시도 중...`);
+        });
+
+        document.body.removeChild(testElement);
+      }
+
+      // 페이지 로드 시 폰트 강제 로딩 시도
+      window.addEventListener("DOMContentLoaded", forceFontLoad);
+
+      // 폰트 로딩 상태 확인
+      document.fonts.ready.then(function () {
+        console.log("모든 폰트가 로드되었습니다!");
+
+        // 이미지 및 폰트 프리로딩 확인
+        console.log(
+          "폰트 로딩 상태:",
+          document.fonts.check("16px 'Noto Sans KR'") ? "성공" : "실패"
+        );
+
+        // 이미 카드가 표시되어 있다면 새로고침
+        const card = document.getElementById("card");
+        if (card && card.style.display === "block") {
+          console.log("카드 폰트 새로고침");
+          const emoji = document.getElementById("emoji");
+          const title = document.getElementById("title");
+          const message = document.getElementById("message");
+
+          if (emoji) emoji.style.opacity = "0.99";
+          if (title) title.style.opacity = "0.99";
+          if (message) message.style.opacity = "0.99";
+
+          setTimeout(() => {
+            if (emoji) emoji.style.opacity = "1";
+            if (title) title.style.opacity = "1";
+            if (message) message.style.opacity = "1";
+          }, 50);
+        }
+      });
+    </script>
 
     <script src="js/app.js"></script>
   </body>

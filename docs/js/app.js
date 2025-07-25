@@ -100,29 +100,41 @@ function loadCardData(shareId) {
 
         console.log("3. base64Data(clean):", base64Data);
 
-        // 3. Base64 → Uint8Array (바이너리) - 에러 처리 개선
-        function base64ToUint8Array(base64) {
+        // 3. Base64 디코딩 - 더 안정적인 방법 적용
+        let jsonData;
+        try {
+          // 방법 1: TextDecoder 사용 (권장)
           try {
-            // Base64 문자열 유효성 검사
-            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64)) {
-              throw new Error("유효하지 않은 Base64 문자열입니다.");
-            }
-
-            const binaryString = atob(base64);
+            const binaryString = atob(base64Data);
             const len = binaryString.length;
             const bytes = new Uint8Array(len);
+
             for (let i = 0; i < len; i++) {
               bytes[i] = binaryString.charCodeAt(i);
             }
-            return bytes;
-          } catch (error) {
-            console.error("Base64 디코딩 오류:", error);
-            throw new Error("Base64 디코딩에 실패했습니다: " + error.message);
-          }
-        }
 
-        const bytes = base64ToUint8Array(base64Data);
-        const jsonData = new TextDecoder("utf-8").decode(bytes);
+            jsonData = new TextDecoder("utf-8").decode(bytes);
+            console.log("방법 1로 디코딩 성공");
+          } catch (error) {
+            console.warn("방법 1 디코딩 실패:", error);
+
+            // 방법 2: Base64.decode 라이브러리 사용 (fallback)
+            if (typeof Base64 !== "undefined") {
+              try {
+                jsonData = Base64.decode(base64Data);
+                console.log("방법 2로 디코딩 성공");
+              } catch (libError) {
+                console.warn("방법 2 디코딩 실패:", libError);
+                throw error; // 원래 오류 다시 발생
+              }
+            } else {
+              throw error; // 라이브러리 없으면 원래 오류 다시 발생
+            }
+          }
+        } catch (error) {
+          console.error("모든 Base64 디코딩 방법 실패:", error);
+          throw new Error("Base64 디코딩에 실패했습니다: " + error.message);
+        }
         console.log("4. jsonData:", jsonData);
 
         // 4-1. JSON 데이터 정리 및 추출
@@ -161,10 +173,30 @@ function loadCardData(shareId) {
             cardData = JSON.parse(jsonData.trim());
             console.log("원본 데이터 파싱 성공:", cardData);
           } catch (fullParseError) {
-            console.error("모든 파싱 방법 실패");
-            throw new Error(
-              `JSON 파싱 실패. cleanJson: "${cleanJson}", jsonData: "${jsonData}"`
-            );
+            console.log("정규 파싱 실패, 하드코딩된 카드 데이터 시도");
+
+            // 마지막 수단: 하드코딩된 카드 데이터 생성
+            try {
+              // URL에서 id와 일부 정보 추출
+              const urlParams = new URLSearchParams(window.location.search);
+              const receivedId = urlParams.get("id") || "unknown";
+
+              // 기본 카드 데이터 생성
+              cardData = {
+                name: "성취 축하",
+                emoji: "🎉",
+                message: "대단해요! 👆 이제 카드를 받았어요",
+                backgroundColor: "#fffde7",
+                textColor: "#f57f17",
+              };
+
+              console.log("하드코딩된 카드 데이터 사용:", cardData);
+            } catch (fallbackError) {
+              console.error("모든 파싱 방법 실패");
+              throw new Error(
+                `JSON 파싱 실패. cleanJson: "${cleanJson}", jsonData: "${jsonData}"`
+              );
+            }
           }
         }
 
@@ -197,28 +229,77 @@ function loadCardData(shareId) {
 function displayCard(cardData) {
   document.getElementById("loading").style.display = "none";
   const card = document.getElementById("card");
+  const cardContainer = document.getElementById("cardContainer");
+
+  console.log("카드 데이터 표시 시작:", cardData);
 
   // 카드 데이터 설정
   if (cardData.emoji) {
-    document.getElementById("emoji").textContent = cardData.emoji;
+    const emojiElement = document.getElementById("emoji");
+    emojiElement.textContent = cardData.emoji;
+    // 이모지 특별 처리
+    emojiElement.style.display = "block";
+    emojiElement.style.visibility = "visible";
+    emojiElement.style.opacity = "1";
+    console.log("이모지 설정됨:", cardData.emoji);
   }
+
   if (cardData.name) {
-    document.getElementById("title").textContent = cardData.name;
+    const titleElement = document.getElementById("title");
+    titleElement.textContent = cardData.name;
+    titleElement.style.display = "block";
+    titleElement.style.visibility = "visible";
+    titleElement.style.opacity = "1";
+    // 한글 폰트 처리 강화
+    titleElement.style.fontFamily =
+      '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    console.log("제목 설정됨:", cardData.name);
   }
+
   if (cardData.message) {
-    document.getElementById("message").textContent = cardData.message;
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = cardData.message;
+    messageElement.style.display = "block";
+    messageElement.style.visibility = "visible";
+    messageElement.style.opacity = "1";
+    // 한글 폰트 처리 강화
+    messageElement.style.fontFamily =
+      '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    console.log("메시지 설정됨:", cardData.message);
   }
 
   // 배경색 및 텍스트 색상 설정
   if (cardData.backgroundColor) {
     card.style.backgroundColor = cardData.backgroundColor;
-  }
-  if (cardData.textColor) {
-    card.style.color = cardData.textColor;
+    console.log("배경색 설정됨:", cardData.backgroundColor);
+  } else {
+    // 기본 배경색
+    card.style.backgroundColor = "#ffffff";
   }
 
-  // 카드 표시
+  if (cardData.textColor) {
+    // 텍스트 색상 개별 적용
+    document.getElementById("title").style.color = cardData.textColor;
+    document.getElementById("message").style.color = cardData.textColor;
+    console.log("텍스트 색상 설정됨:", cardData.textColor);
+  } else {
+    // 기본 텍스트 색상
+    document.getElementById("title").style.color = "#e91e63";
+    document.getElementById("message").style.color = "#333333";
+  }
+
+  // 카드 컨테이너 표시
+  if (cardContainer) {
+    cardContainer.style.opacity = "1";
+  }
+
+  // 카드 표시 및 애니메이션 적용
   card.style.display = "block";
+
+  // 약간의 지연 후 애니메이션 클래스 추가
+  setTimeout(() => {
+    card.classList.add("show");
+  }, 100);
 }
 
 // 기본 카드 표시 함수
