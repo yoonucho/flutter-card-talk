@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>간단한 Base64 UTF-8 인코딩/디코딩 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        background: #007cba;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #005a87;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 4px;
+        word-break: break-all;
+        min-height: 20px;
+      }
+      .success {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+      }
+      .error {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>간단한 Base64 UTF-8 인코딩/디코딩 테스트</h1>
+
+      <p>
+        <strong
+          >이 테스트는 한글과 이모지를 포함한 JSON 데이터를 안전하게 Base64로
+          인코딩/디코딩합니다.</strong
+        >
+      </p>
+
+      <h2>1. 원본 JSON 데이터</h2>
+      <textarea id="jsonInput" placeholder="JSON 데이터를 입력하세요...">
+{"name":"테스트 카드","emoji":"💌","message":"안녕하세요! 테스트 메시지입니다.","backgroundColor":"#fce4ec","textColor":"#c2185b"}</textarea
+      >
+
+      <h2>2. 전체 프로세스 테스트</h2>
+      <button onclick="runFullTest()">전체 테스트 실행</button>
+      <button onclick="clearResults()">결과 초기화</button>
+
+      <h3>인코딩 결과</h3>
+      <div class="result" id="encodeResult"></div>
+
+      <h3>URL 안전 변환 결과</h3>
+      <div class="result" id="urlSafeResult"></div>
+
+      <h3>디코딩 결과</h3>
+      <div class="result" id="decodeResult"></div>
+
+      <h3>JSON 검증 결과</h3>
+      <div class="result" id="jsonResult"></div>
+    </div>
+
+    <script>
+      // 최신 브라우저 API를 사용한 UTF-8 Base64 인코딩
+      function utf8ToBase64(str) {
+        try {
+          // TextEncoder를 사용해 UTF-8 바이트로 변환
+          const encoder = new TextEncoder();
+          const data = encoder.encode(str);
+
+          // Uint8Array를 바이너리 문자열로 변환
+          let binary = "";
+          data.forEach((byte) => {
+            binary += String.fromCharCode(byte);
+          });
+
+          // Base64로 인코딩
+          return btoa(binary);
+        } catch (error) {
+          throw new Error(`UTF-8 Base64 인코딩 실패: ${error.message}`);
+        }
+      }
+
+      // 최신 브라우저 API를 사용한 UTF-8 Base64 디코딩
+      function base64ToUtf8(base64) {
+        try {
+          // Base64를 바이너리 문자열로 디코딩
+          const binary = atob(base64);
+
+          // 바이너리 문자열을 Uint8Array로 변환
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+          }
+
+          // TextDecoder를 사용해 UTF-8 문자열로 변환
+          const decoder = new TextDecoder("utf-8");
+          return decoder.decode(bytes);
+        } catch (error) {
+          throw new Error(`UTF-8 Base64 디코딩 실패: ${error.message}`);
+        }
+      }
+
+      // URL 안전 Base64 변환
+      function makeUrlSafe(base64) {
+        return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+      }
+
+      // URL 안전 Base64를 표준 Base64로 복원
+      function restoreFromUrlSafe(urlSafe) {
+        let base64 = urlSafe.replace(/-/g, "+").replace(/_/g, "/");
+        // 패딩 복원
+        while (base64.length % 4) {
+          base64 += "=";
+        }
+        return base64;
+      }
+
+      // 전체 테스트 실행
+      function runFullTest() {
+        const jsonInput = document.getElementById("jsonInput").value.trim();
+
+        if (!jsonInput) {
+          showError("encodeResult", "JSON 데이터를 입력해주세요.");
+          return;
+        }
+
+        try {
+          // 1. JSON 유효성 검사
+          JSON.parse(jsonInput);
+
+          // 2. UTF-8 Base64 인코딩
+          const base64 = utf8ToBase64(jsonInput);
+          showSuccess("encodeResult", `✅ 인코딩 성공: ${base64}`);
+
+          // 3. URL 안전 변환
+          const urlSafe = makeUrlSafe(base64);
+          showSuccess("urlSafeResult", `✅ URL 안전 변환: ${urlSafe}`);
+
+          // 4. URL 안전 Base64 복원
+          const restored = restoreFromUrlSafe(urlSafe);
+
+          // 5. UTF-8 Base64 디코딩
+          const decoded = base64ToUtf8(restored);
+          showSuccess("decodeResult", `✅ 디코딩 성공: ${decoded}`);
+
+          // 6. JSON 파싱 검증
+          const parsedJson = JSON.parse(decoded);
+          showSuccess(
+            "jsonResult",
+            `✅ JSON 파싱 성공: ${JSON.stringify(parsedJson, null, 2)}`
+          );
+
+          // 7. 원본과 비교
+          if (
+            JSON.stringify(JSON.parse(jsonInput)) === JSON.stringify(parsedJson)
+          ) {
+            console.log("✅ 원본과 복원된 데이터가 일치합니다!");
+          } else {
+            console.warn("⚠️ 원본과 복원된 데이터가 다릅니다!");
+          }
+        } catch (error) {
+          console.error("테스트 실패:", error);
+          showError("jsonResult", `❌ 테스트 실패: ${error.message}`);
+        }
+      }
+
+      // 성공 메시지 표시
+      function showSuccess(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.className = "result success";
+        element.textContent = message;
+      }
+
+      // 에러 메시지 표시
+      function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.className = "result error";
+        element.textContent = message;
+      }
+
+      // 결과 초기화
+      function clearResults() {
+        ["encodeResult", "urlSafeResult", "decodeResult", "jsonResult"].forEach(
+          (id) => {
+            const element = document.getElementById(id);
+            element.className = "result";
+            element.textContent = "";
+          }
+        );
+      }
+
+      // 페이지 로드 시 자동 테스트
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log(
+          '페이지 로드 완료. 테스트를 실행하려면 "전체 테스트 실행" 버튼을 클릭하세요.'
+        );
+      });
+    </script>
+  </body>
+</html>

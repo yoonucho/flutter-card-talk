@@ -59,16 +59,22 @@ class ShareService {
         'emoji': template.emoji,
         'message': message,
         'backgroundColor':
-            '#${template.backgroundColor.value.toRadixString(16).substring(2)}',
+            '# [${template.backgroundColor.value.toRadixString(16).substring(2)}',
         'textColor':
-            '#${template.textColor.value.toRadixString(16).substring(2)}',
+            '# [${template.textColor.value.toRadixString(16).substring(2)}',
       };
-
+      print('urlData: $urlData');
+      final jsonStr = jsonEncode(urlData);
+      print('jsonStr: $jsonStr');
+      final utf8Bytes = utf8.encode(jsonStr);
+      print('utf8Bytes: $utf8Bytes');
       // 데이터를 Base64로 인코딩
-      final encodedData = base64Encode(utf8.encode(jsonEncode(urlData)));
-
+      final encodedData = base64Encode(utf8Bytes);
+      // 공백/줄바꿈 제거
+      final cleanedData = encodedData.replaceAll(RegExp(r'\s+'), '');
+      print('base64: $encodedData');
       // URL 안전하게 인코딩 (+ → -, / → _, = 제거)
-      final urlSafeData = Uri.encodeComponent(encodedData);
+      final urlSafeData = Uri.encodeComponent(cleanedData);
 
       // 공유 링크 생성
       final shareLink = '${baseShareUrl}?id=$uuid&data=$urlSafeData';

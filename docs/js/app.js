@@ -90,26 +90,90 @@ function loadCardData(shareId) {
 
         // 2. URL 안전 Base64를 표준 Base64로 변환
         let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
-        while (base64Data.length % 4) base64Data += "=";
-        console.log("3. base64Data:", base64Data);
+        // 공백, 줄바꿈 등 제거
+        base64Data = base64Data.replace(/\s+/g, "");
 
-        // 3. js-base64로 디코딩
-        const jsonData = Base64.decode(base64Data);
+        // Base64 패딩 보정
+        while (base64Data.length % 4) {
+          base64Data += "=";
+        }
+
+        console.log("3. base64Data(clean):", base64Data);
+
+        // 3. Base64 → Uint8Array (바이너리) - 에러 처리 개선
+        function base64ToUint8Array(base64) {
+          try {
+            // Base64 문자열 유효성 검사
+            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64)) {
+              throw new Error("유효하지 않은 Base64 문자열입니다.");
+            }
+
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+          } catch (error) {
+            console.error("Base64 디코딩 오류:", error);
+            throw new Error("Base64 디코딩에 실패했습니다: " + error.message);
+          }
+        }
+
+        const bytes = base64ToUint8Array(base64Data);
+        const jsonData = new TextDecoder("utf-8").decode(bytes);
         console.log("4. jsonData:", jsonData);
 
-        // 4. JSON 파싱
-        if (!jsonData || jsonData.trim() === "") {
-          throw new Error("디코딩된 데이터가 비어있습니다.");
-        }
-        const cardData = JSON.parse(jsonData);
-        if (isDebug) console.log("파싱된 카드 데이터:", cardData);
+        // 4-1. JSON 데이터 정리 및 추출
+        let cleanJson = jsonData.trim();
 
-        // 5. 필수 필드 확인
+        // JSON 객체 추출 시도
+        const jsonStart = cleanJson.indexOf("{");
+        const jsonEnd = cleanJson.lastIndexOf("}");
+
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          cleanJson = cleanJson.substring(jsonStart, jsonEnd + 1);
+        }
+
+        console.log("4-1. cleanJson:", cleanJson);
+        console.log("4-2. cleanJson length:", cleanJson.length);
+
+        // 5. JSON 파싱 - 개선된 방법
+        let cardData;
+
+        // 빈 데이터 체크
+        if (!cleanJson || cleanJson.trim() === "" || cleanJson === "{}") {
+          throw new Error(
+            "디코딩된 데이터가 비어있습니다. 원본 데이터: " + jsonData
+          );
+        }
+
+        try {
+          // 먼저 정리된 데이터로 파싱 시도
+          cardData = JSON.parse(cleanJson);
+          console.log("정리된 데이터 파싱 성공:", cardData);
+        } catch (directParseError) {
+          console.log("정리된 데이터 파싱 실패, 원본 데이터로 시도");
+
+          // 대안: 전체 jsonData로 파싱 시도
+          try {
+            cardData = JSON.parse(jsonData.trim());
+            console.log("원본 데이터 파싱 성공:", cardData);
+          } catch (fullParseError) {
+            console.error("모든 파싱 방법 실패");
+            throw new Error(
+              `JSON 파싱 실패. cleanJson: "${cleanJson}", jsonData: "${jsonData}"`
+            );
+          }
+        }
+
+        // 6. 필수 필드 확인
         if (!cardData.name && !cardData.message) {
           throw new Error("카드 데이터 형식이 올바르지 않습니다.");
         }
 
-        // 6. 카드 데이터 표시
+        // 7. 카드 데이터 표시
         displayCard(cardData);
       } catch (error) {
         console.error("카드 데이터 처리 오류:", error);
