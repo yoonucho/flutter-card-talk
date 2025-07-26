@@ -104,23 +104,42 @@ function loadCardData(shareId) {
           urlDecoded = encodedData; // URL 디코딩 실패 시 원본 사용
         }
 
-        // 2. URL 안전 Base64를 표준 Base64로 변환
-        let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
-        // 공백, 줄바꿈 등 제거
-        base64Data = base64Data.replace(/\s+/g, "");
+        // 2. URL 안전 Base64를 표준 Base64로 변환 및 데이터 정리
+        // 모든 공백 제거 (중요: 공백이 있으면 디코딩 실패)
+        let base64Data = urlDecoded.replace(/\s+/g, "");
+
+        // URL 안전 Base64를 표준 Base64로 변환
+        base64Data = base64Data.replace(/-/g, "+").replace(/_/g, "/");
+
+        // 잘못된 문자 제거 (알파벳, 숫자, +, /, = 외 모든 문자 제거)
+        base64Data = base64Data.replace(/[^A-Za-z0-9+/=]/g, "");
 
         // Base64 패딩 보정
         while (base64Data.length % 4) {
           base64Data += "=";
         }
 
-        console.log("3. base64Data(clean):", base64Data);
+        console.log("3. base64Data(정리 후):", base64Data);
 
-        // 3. Base64 디코딩 - 더 안정적인 방법 적용
+        // 3. Base64 디코딩 - 강화된 오류 처리 및 추가 복구 메커니즘
         let jsonData;
         try {
           // 방법 1: TextDecoder 사용 (권장)
           try {
+            // base64Data가 유효한지 확인
+            if (!base64Data || base64Data.trim() === "") {
+              throw new Error("빈 Base64 데이터");
+            }
+
+            // 표준 Base64 패턴 검증
+            const base64Pattern = /^[A-Za-z0-9+/=]+$/;
+            if (!base64Pattern.test(base64Data)) {
+              console.warn(
+                "유효하지 않은 Base64 문자가 포함되어 있습니다. 정리 시도..."
+              );
+              base64Data = base64Data.replace(/[^A-Za-z0-9+/=]/g, "");
+            }
+
             const binaryString = atob(base64Data);
             const len = binaryString.length;
             const bytes = new Uint8Array(len);
@@ -141,7 +160,46 @@ function loadCardData(shareId) {
                 console.log("방법 2로 디코딩 성공");
               } catch (libError) {
                 console.warn("방법 2 디코딩 실패:", libError);
-                throw error; // 원래 오류 다시 발생
+
+                // 방법 3: 디코딩 직접 구현 (최후의 수단)
+                try {
+                  // base64 문자를 인덱스로 변환
+                  const base64Chars =
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+                  let output = "";
+                  let chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+                  let i = 0;
+
+                  // base64 인코딩 제거
+                  base64Data = base64Data.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+                  while (i < base64Data.length) {
+                    enc1 = base64Chars.indexOf(base64Data.charAt(i++));
+                    enc2 = base64Chars.indexOf(base64Data.charAt(i++));
+                    enc3 = base64Chars.indexOf(base64Data.charAt(i++));
+                    enc4 = base64Chars.indexOf(base64Data.charAt(i++));
+
+                    chr1 = (enc1 << 2) | (enc2 >> 4);
+                    chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                    chr3 = ((enc3 & 3) << 6) | enc4;
+
+                    output = output + String.fromCharCode(chr1);
+
+                    if (enc3 !== 64) {
+                      output = output + String.fromCharCode(chr2);
+                    }
+                    if (enc4 !== 64) {
+                      output = output + String.fromCharCode(chr3);
+                    }
+                  }
+
+                  // UTF-8 디코딩
+                  jsonData = decodeURIComponent(escape(output));
+                  console.log("방법 3으로 디코딩 성공");
+                } catch (customError) {
+                  console.warn("방법 3 디코딩 실패:", customError);
+                  throw error; // 원래 오류 다시 발생
+                }
               }
             } else {
               throw error; // 라이브러리 없으면 원래 오류 다시 발생
@@ -181,6 +239,27 @@ function loadCardData(shareId) {
           // 먼저 정리된 데이터로 파싱 시도
           cardData = JSON.parse(cleanJson);
           console.log("정리된 데이터 파싱 성공:", cardData);
+
+          // 색상값 정리 및 검증
+          if (cardData.backgroundColor) {
+            // 색상값이 유효한지 확인
+            if (cardData.backgroundColor.includes("[")) {
+              console.log(
+                "잘못된 배경색 형식 감지, 정리 시도:",
+                cardData.backgroundColor
+              );
+            }
+          }
+
+          if (cardData.textColor) {
+            // 색상값이 유효한지 확인
+            if (cardData.textColor.includes("[")) {
+              console.log(
+                "잘못된 텍스트 색상 형식 감지, 정리 시도:",
+                cardData.textColor
+              );
+            }
+          }
         } catch (directParseError) {
           console.log("정리된 데이터 파싱 실패, 원본 데이터로 시도");
 
@@ -205,6 +284,27 @@ function loadCardData(shareId) {
                 backgroundColor: "#fffde7",
                 textColor: "#f57f17",
               };
+
+              // 잘못된 색상 형식이 있는지 확인하고 정리
+              try {
+                // URL 파라미터에서 색상 정보 추출 시도
+                const encodedData = urlParams.get("data");
+                if (encodedData) {
+                  // 데이터에서 색상 정보 추출 시도
+                  const dataMatch = encodedData.match(
+                    /backgroundColor|textColor/g
+                  );
+                  if (dataMatch) {
+                    console.log(
+                      "원본 데이터에서 색상 정보 감지됨:",
+                      dataMatch.length,
+                      "개"
+                    );
+                  }
+                }
+              } catch (colorError) {
+                console.warn("색상 정보 추출 중 오류:", colorError);
+              }
 
               console.log("하드코딩된 카드 데이터 사용:", cardData);
             } catch (fallbackError) {
@@ -252,12 +352,34 @@ function displayCard(cardData) {
   // 카드 데이터 설정
   if (cardData.emoji) {
     const emojiElement = document.getElementById("emoji");
-    emojiElement.textContent = cardData.emoji;
-    // 이모지 특별 처리
-    emojiElement.style.display = "block";
-    emojiElement.style.visibility = "visible";
-    emojiElement.style.opacity = "1";
-    console.log("이모지 설정됨:", cardData.emoji);
+
+    // 이모지가 유니코드 이스케이프 형식으로 들어온 경우 (\uD83D\uDC99) 처리
+    let emoji = cardData.emoji;
+    try {
+      // 이모지가 이미 디코딩되었는지 확인
+      if (emoji.startsWith("\\u")) {
+        // 이스케이프된 유니코드 문자열을 실제 이모지로 변환
+        emoji = emoji.replace(/\\u([0-9a-fA-F]{4})/g, (match, p1) => {
+          return String.fromCodePoint(parseInt(p1, 16));
+        });
+        console.log("이모지 유니코드 변환:", emoji);
+      }
+
+      // 이모지 설정
+      emojiElement.textContent = emoji;
+
+      // 이모지 특별 처리
+      emojiElement.style.display = "block";
+      emojiElement.style.visibility = "visible";
+      emojiElement.style.opacity = "1";
+      emojiElement.style.fontSize = "5rem"; // 이모지 크기 확대
+      console.log("이모지 설정됨:", emoji);
+    } catch (emojiError) {
+      console.error("이모지 처리 오류:", emojiError);
+      // 오류 발생 시 기본 이모지 설정
+      emojiElement.textContent = "🎁";
+      emojiElement.style.display = "block";
+    }
   }
 
   if (cardData.name) {
@@ -284,20 +406,68 @@ function displayCard(cardData) {
     console.log("메시지 설정됨:", cardData.message);
   }
 
-  // 배경색 및 텍스트 색상 설정
+  // 색상 정규화 함수 - 전역 함수로 정의
+  function fixColor(color) {
+    if (!color) return "#ffffff"; // 색상이 없으면 기본 흰색 반환
+
+    // 공백 제거
+    color = color.trim();
+
+    // "# [fff3e0" 같은 형식 처리
+    if (color.includes("[")) {
+      try {
+        color = "#" + color.split("[")[1].trim();
+      } catch (e) {
+        console.warn("색상 포맷 변환 중 오류:", e);
+      }
+    }
+
+    // 첫 번째 # 기호가 없는 경우 추가
+    if (!color.startsWith("#") && color.match(/^[0-9a-fA-F]{3,8}$/)) {
+      color = "#" + color;
+    }
+
+    return color;
+  }
+
+  // 배경색 및 텍스트 색상 설정 (단순화된 색상 처리)
   if (cardData.backgroundColor) {
-    card.style.backgroundColor = cardData.backgroundColor;
-    console.log("배경색 설정됨:", cardData.backgroundColor);
+    try {
+      // 잘못된 형식의 색상값 정리 및 다양한 형식 지원
+      let bgColor = cardData.backgroundColor;
+
+      // 색상 정규화 적용
+      let fixedBgColor = fixColor(bgColor);
+      card.style.backgroundColor = fixedBgColor;
+      console.log("배경색 설정됨 (정리 후):", fixedBgColor);
+    } catch (error) {
+      // 오류 발생 시 기본 배경색
+      card.style.backgroundColor = "#ffffff";
+      console.warn("배경색 설정 중 오류 발생, 기본값 적용:", error);
+    }
   } else {
     // 기본 배경색
     card.style.backgroundColor = "#ffffff";
   }
 
   if (cardData.textColor) {
-    // 텍스트 색상 개별 적용
-    document.getElementById("title").style.color = cardData.textColor;
-    document.getElementById("message").style.color = cardData.textColor;
-    console.log("텍스트 색상 설정됨:", cardData.textColor);
+    try {
+      // 잘못된 형식의 색상값 정리
+      let txtColor = cardData.textColor;
+
+      // 색상 정규화 적용
+      let fixedTxtColor = fixColor(txtColor);
+
+      // 텍스트 색상 개별 적용
+      document.getElementById("title").style.color = fixedTxtColor;
+      document.getElementById("message").style.color = fixedTxtColor;
+      console.log("텍스트 색상 설정됨 (정리 후):", fixedTxtColor);
+    } catch (error) {
+      // 오류 발생 시 기본 텍스트 색상
+      document.getElementById("title").style.color = "#e91e63";
+      document.getElementById("message").style.color = "#333333";
+      console.warn("텍스트 색상 설정 중 오류 발생, 기본값 적용:", error);
+    }
   } else {
     // 기본 텍스트 색상
     document.getElementById("title").style.color = "#e91e63";
@@ -397,52 +567,282 @@ function displayCard(cardData) {
 function displayDefaultCard(shareId) {
   document.getElementById("loading").style.display = "none";
 
-  if (shareId) {
-    // 기본 카드 표시 (ID만 있는 경우)
-    document.getElementById("title").textContent =
-      "카드 정보를 찾을 수 없습니다";
-    document.getElementById("message").textContent =
-      "카드가 만료되었거나 잘못된 링크입니다. 카드톡 앱에서 다시 공유해보세요.";
-  } else {
-    // ID도 없는 경우
-    document.getElementById("title").textContent = "잘못된 접근입니다";
-    document.getElementById("message").textContent =
-      "올바른 링크로 접속해주세요.";
+  // 카드 요소들 확보
+  const card = document.getElementById("card");
+  const emojiElement = document.getElementById("emoji");
+  const titleElement = document.getElementById("title");
+  const messageElement = document.getElementById("message");
+
+  // 카드 컨테이너 표시 상태 확인
+  const cardContainer = document.getElementById("cardContainer");
+  if (cardContainer) {
+    cardContainer.style.display = "block";
+    cardContainer.style.visibility = "visible";
+    cardContainer.style.opacity = "1";
   }
 
-  document.getElementById("card").style.display = "block";
+  if (shareId) {
+    // 기본 카드 표시 (ID만 있는 경우)
+    if (emojiElement) emojiElement.textContent = "⚠️";
+    if (titleElement) titleElement.textContent = "카드 정보를 찾을 수 없습니다";
+    if (messageElement)
+      messageElement.textContent =
+        "카드가 만료되었거나 잘못된 링크입니다. 카드톡 앱에서 다시 공유해보세요.";
+  } else {
+    // ID도 없는 경우
+    if (emojiElement) emojiElement.textContent = "🔒";
+    if (titleElement) titleElement.textContent = "잘못된 접근입니다";
+    if (messageElement)
+      messageElement.textContent = "올바른 링크로 접속해주세요.";
+  }
+
+  // 스타일 적용
+  if (emojiElement) {
+    emojiElement.style.display = "block";
+    emojiElement.style.visibility = "visible";
+    emojiElement.style.opacity = "1";
+    emojiElement.style.fontSize = "5rem";
+  }
+
+  if (titleElement && messageElement) {
+    titleElement.style.display = "block";
+    titleElement.style.visibility = "visible";
+    titleElement.style.opacity = "1";
+    messageElement.style.display = "block";
+    messageElement.style.visibility = "visible";
+    messageElement.style.opacity = "1";
+
+    // 한글 폰트 처리 강화
+    titleElement.style.fontFamily =
+      '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    messageElement.style.fontFamily =
+      '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+  }
+
+  // 카드 스타일 및 표시
+  if (card) {
+    card.style.backgroundColor = "#fff9c4"; // 밝은 노란색 배경
+    card.style.display = "block";
+    card.style.visibility = "visible";
+    card.style.opacity = "1";
+
+    // 기본 텍스트 색상
+    if (titleElement) titleElement.style.color = "#ff5722"; // 주황색 제목
+    if (messageElement) messageElement.style.color = "#333333"; // 어두운 회색 메시지
+  }
 }
 
 // 오류 표시 함수
 function showError(message) {
-  document.getElementById("loading").style.display = "none";
-  const errorElement = document.getElementById("error");
-  const errorMessageElement = document.getElementById("errorMessage");
+  // 로딩 표시 숨김
+  const loadingElement = document.getElementById("loading");
+  if (loadingElement) {
+    loadingElement.style.display = "none";
+  }
 
-  // 오류 메시지 사용자 친화적으로 변경
-  let userFriendlyMessage = "카드를 불러올 수 없습니다.";
+  // 오류 표시를 위한 컨테이너 생성 또는 획득
+  let errorContainer = document.getElementById("errorContainer");
+  if (!errorContainer) {
+    errorContainer = document.createElement("div");
+    errorContainer.id = "errorContainer";
+    document.body.appendChild(errorContainer);
 
-  // 개발 모드에서만 상세 오류 표시 (URL에 debug=true가 있는 경우)
+    // 오류 컨테이너 스타일 설정
+    errorContainer.style.position = "fixed";
+    errorContainer.style.top = "0";
+    errorContainer.style.left = "0";
+    errorContainer.style.width = "100%";
+    errorContainer.style.height = "100%";
+    errorContainer.style.display = "flex";
+    errorContainer.style.flexDirection = "column";
+    errorContainer.style.justifyContent = "center";
+    errorContainer.style.alignItems = "center";
+    errorContainer.style.backgroundColor = "rgba(255, 235, 238, 0.95)"; // 밝은 빨간색 배경
+    errorContainer.style.zIndex = "9999"; // 최상위 표시
+    errorContainer.style.padding = "20px";
+    errorContainer.style.boxSizing = "border-box";
+    errorContainer.style.textAlign = "center";
+  }
+
+  // 기존 오류 컨테이너 내용 제거
+  errorContainer.innerHTML = "";
+
+  // 카드 컨테이너 숨김
+  const cardContainer = document.getElementById("cardContainer");
+  if (cardContainer) {
+    cardContainer.style.display = "none";
+  }
+
+  // URL 파라미터 및 디버그 모드 확인
   const urlParams = new URLSearchParams(window.location.search);
   const isDebug = urlParams.get("debug") === "true";
+  const shareId = urlParams.get("id") || "unknown";
 
+  // 오류 아이콘 생성
+  const errorIcon = document.createElement("div");
+  errorIcon.innerHTML = "⚠️";
+  errorIcon.style.fontSize = "72px";
+  errorIcon.style.marginBottom = "20px";
+  errorContainer.appendChild(errorIcon);
+
+  // 오류 유형 판단
+  let errorType = "unknown";
+  let userFriendlyMessage = "카드를 불러올 수 없습니다";
+
+  if (message.includes("Base64")) {
+    errorType = "base64-decode";
+    userFriendlyMessage = "카드 데이터 형식이 올바르지 않습니다";
+  } else if (message.includes("JSON")) {
+    errorType = "json-parse";
+    userFriendlyMessage = "카드 데이터가 손상되었습니다";
+  } else if (message.includes("color")) {
+    errorType = "color-format";
+    userFriendlyMessage = "카드의 색상 형식에 문제가 있습니다";
+  } else if (message.includes("undefined") || message.includes("null")) {
+    errorType = "missing-property";
+    userFriendlyMessage = "카드 데이터가 불완전합니다";
+  }
+
+  // 오류 제목 생성
+  const errorTitle = document.createElement("h2");
+  errorTitle.textContent = userFriendlyMessage;
+  errorTitle.style.color = "#d32f2f"; // 진한 빨간색
+  errorTitle.style.fontFamily = "'Noto Sans KR', sans-serif";
+  errorTitle.style.fontSize = "24px";
+  errorTitle.style.margin = "10px 0";
+  errorContainer.appendChild(errorTitle);
+
+  // 오류 설명 생성
+  const errorDesc = document.createElement("p");
+  errorDesc.textContent =
+    "카드가 만료되었거나 잘못된 링크일 수 있습니다. 카드톡 앱에서 다시 공유해보세요.";
+  errorDesc.style.color = "#555555";
+  errorDesc.style.fontFamily = "'Noto Sans KR', sans-serif";
+  errorDesc.style.fontSize = "16px";
+  errorDesc.style.margin = "10px 0 20px 0";
+  errorContainer.appendChild(errorDesc);
+
+  // 개발 모드에서 상세 오류 정보 표시
   if (isDebug) {
-    userFriendlyMessage += " 상세 오류: " + message;
+    // 상세 오류 컨테이너
+    const detailContainer = document.createElement("div");
+    detailContainer.style.backgroundColor = "#f8f8f8";
+    detailContainer.style.border = "1px solid #ddd";
+    detailContainer.style.borderRadius = "8px";
+    detailContainer.style.padding = "15px";
+    detailContainer.style.margin = "15px 0";
+    detailContainer.style.maxWidth = "90%";
+    detailContainer.style.width = "500px";
+    detailContainer.style.textAlign = "left";
+    detailContainer.style.overflow = "auto";
+    detailContainer.style.fontFamily = "monospace";
+
+    // 오류 유형 표시
+    const errorTypeElement = document.createElement("div");
+    errorTypeElement.innerHTML = `<strong>오류 유형:</strong> ${errorType}`;
+    errorTypeElement.style.marginBottom = "10px";
+    detailContainer.appendChild(errorTypeElement);
+
+    // 오류 메시지 표시
+    const errorMsgElement = document.createElement("div");
+    errorMsgElement.innerHTML = `<strong>오류 메시지:</strong> ${message}`;
+    errorMsgElement.style.marginBottom = "10px";
+    detailContainer.appendChild(errorMsgElement);
+
+    // 카드 ID 표시
+    const cardIdElement = document.createElement("div");
+    cardIdElement.innerHTML = `<strong>카드 ID:</strong> ${shareId}`;
+    cardIdElement.style.marginBottom = "10px";
+    detailContainer.appendChild(cardIdElement);
+
+    // 오류 시간 표시
+    const timeElement = document.createElement("div");
+    timeElement.innerHTML = `<strong>발생 시간:</strong> ${new Date().toLocaleString()}`;
+    detailContainer.appendChild(timeElement);
+
+    errorContainer.appendChild(detailContainer);
 
     // 콘솔에 디버깅 정보 출력
     console.group("카드 로딩 디버그 정보");
     console.log("URL 파라미터:", urlParams.toString());
+    console.log("카드 ID:", shareId);
     console.log("User Agent:", navigator.userAgent);
     console.log("오류 메시지:", message);
+    console.log("오류 유형:", errorType);
     console.groupEnd();
-  } else {
-    userFriendlyMessage += " 다시 시도해 주세요.";
   }
 
-  if (errorMessageElement) {
-    errorMessageElement.textContent = userFriendlyMessage;
+  // 버튼 컨테이너
+  const buttonContainer = document.createElement("div");
+  buttonContainer.style.marginTop = "25px";
+  buttonContainer.style.display = "flex";
+  buttonContainer.style.flexDirection = "column";
+  buttonContainer.style.alignItems = "center";
+  errorContainer.appendChild(buttonContainer);
+
+  // 재시도 버튼 생성
+  const retryButton = document.createElement("button");
+  retryButton.textContent = "다시 시도";
+  retryButton.onclick = function () {
+    location.reload();
+  };
+  retryButton.style.backgroundColor = "#e91e63"; // 핑크색
+  retryButton.style.color = "white";
+  retryButton.style.border = "none";
+  retryButton.style.borderRadius = "25px";
+  retryButton.style.padding = "12px 30px";
+  retryButton.style.fontSize = "16px";
+  retryButton.style.cursor = "pointer";
+  retryButton.style.fontFamily = "'Noto Sans KR', sans-serif";
+  retryButton.style.fontWeight = "bold";
+  retryButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+  retryButton.style.transition = "background-color 0.3s";
+
+  // 버튼 호버 효과
+  retryButton.onmouseover = function () {
+    this.style.backgroundColor = "#d81b60";
+  };
+  retryButton.onmouseout = function () {
+    this.style.backgroundColor = "#e91e63";
+  };
+
+  buttonContainer.appendChild(retryButton);
+
+  // 앱으로 가기 버튼 (선택 사항)
+  const appButton = document.createElement("button");
+  appButton.textContent = "카드톡 앱으로 가기";
+  appButton.onclick = function () {
+    location.href = "cardtalk://open";
+  };
+  appButton.style.backgroundColor = "transparent";
+  appButton.style.color = "#e91e63";
+  appButton.style.border = "1px solid #e91e63";
+  appButton.style.borderRadius = "25px";
+  appButton.style.padding = "10px 20px";
+  appButton.style.fontSize = "14px";
+  appButton.style.cursor = "pointer";
+  appButton.style.fontFamily = "'Noto Sans KR', sans-serif";
+  appButton.style.marginTop = "15px";
+
+  buttonContainer.appendChild(appButton);
+
+  // 기존 오류 요소와 카드를 숨김
+  try {
+    const errorElement = document.getElementById("error");
+    if (errorElement) {
+      errorElement.style.display = "none";
+    }
+
+    const defaultCard = document.getElementById("card");
+    if (defaultCard) {
+      defaultCard.style.display = "none";
+    }
+  } catch (e) {
+    console.error("기존 요소 숨김 처리 중 오류:", e);
   }
-  errorElement.style.display = "block";
+
+  // 오류 컨테이너 표시
+  errorContainer.style.display = "flex";
 }
 
 // 카드 카테고리 판별 함수
@@ -450,7 +850,7 @@ function determineCategory(cardData) {
   console.log("카드 카테고리 판별 시작:", cardData.name);
 
   // 특정 사랑 템플릿 이름을 확인 (사랑고백, 연인에게, 로맨틱)
-  const loveTemplates = ["사랑고백", "연인에게", "로맨틱"];
+  const loveTemplates = ["사랑고백", "연인에게", "로맨틱", "사랑", "연인"];
 
   // 템플릿 이름으로 확인
   if (cardData.name) {
@@ -463,6 +863,18 @@ function determineCategory(cardData) {
         console.log(`사랑 템플릿 '${loveTemplate}' 확인됨:`, templateName);
         return "love";
       }
+    }
+
+    // 템플릿 이름이 한글일 경우 추가 체크
+    if (
+      templateName === "사랑고백" ||
+      templateName === "연인에게" ||
+      templateName === "로맨틱" ||
+      templateName === "연인" ||
+      templateName.indexOf("사랑") >= 0
+    ) {
+      console.log("한글 사랑 템플릿 확인됨:", templateName);
+      return "love";
     }
   }
 
@@ -522,6 +934,59 @@ function createHeartEffect() {
     console.log("===== ❤️ 하트 효과 생성 시작 =====");
     console.log("하트 효과는 사랑고백, 연인에게, 로맨틱 템플릿에만 적용됩니다");
 
+    // 하트 애니메이션용 CSS 스타일 추가
+    const styleId = "heartAnimationStyle";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        @keyframes float-heart {
+          0% {
+            opacity: 0;
+            transform: translateY(0) scale(0.5);
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 0.8;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-100vh) scale(1) rotate(var(--random-rotate));
+            margin-left: var(--random-x);
+          }
+        }
+        .heart {
+          position: absolute;
+          background-color: #ff4081;
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          transform: rotate(45deg);
+          opacity: 0;
+        }
+        .heart:before, .heart:after {
+          content: '';
+          width: 100%;
+          height: 100%;
+          background-color: inherit;
+          border-radius: 50%;
+          position: absolute;
+        }
+        .heart:before {
+          left: -50%;
+          top: 0;
+        }
+        .heart:after {
+          top: -50%;
+          left: 0;
+        }
+      `;
+      document.head.appendChild(style);
+      console.log("하트 애니메이션 스타일 추가됨");
+    }
+
     // 효과 컨테이너 확보 (없으면 body에 새로 생성)
     let effectsContainer = document.getElementById("effectsContainer");
     if (!effectsContainer) {
@@ -530,12 +995,18 @@ function createHeartEffect() {
       effectsContainer = document.createElement("div");
       effectsContainer.id = "effectsContainer";
       effectsContainer.className = "effects-container";
+      effectsContainer.style.position = "fixed";
+      effectsContainer.style.top = "0";
+      effectsContainer.style.left = "0";
+      effectsContainer.style.width = "100%";
+      effectsContainer.style.height = "100vh";
+      effectsContainer.style.zIndex = "30";
+      effectsContainer.style.pointerEvents = "none";
+      effectsContainer.style.overflow = "visible";
+
       // body에 직접 추가 (z-index가 올바르게 적용되도록)
       document.body.prepend(effectsContainer);
       console.log("새 효과 컨테이너 생성됨 (body에 추가됨)");
-
-      // z-index 확인 및 설정
-      effectsContainer.style.zIndex = "30";
       console.log("효과 컨테이너 z-index:", effectsContainer.style.zIndex);
     }
 
@@ -612,6 +1083,38 @@ function createConfettiEffect() {
       "색종이 효과는 일반 템플릿에 적용됩니다 (사랑고백, 연인에게, 로맨틱 제외)"
     );
 
+    // 색종이 애니메이션용 CSS 스타일 추가
+    const styleId = "confettiAnimationStyle";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        @keyframes fall-confetti {
+          0% {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(100vh) rotate(360deg);
+            margin-left: var(--random-x);
+          }
+        }
+        .confetti {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          background-color: #fd6c6c;
+          opacity: 0;
+        }
+      `;
+      document.head.appendChild(style);
+      console.log("색종이 애니메이션 스타일 추가됨");
+    }
+
     // 효과 컨테이너 확보 (없으면 body에 새로 생성)
     let effectsContainer = document.getElementById("effectsContainer");
     if (!effectsContainer) {
@@ -620,12 +1123,18 @@ function createConfettiEffect() {
       effectsContainer = document.createElement("div");
       effectsContainer.id = "effectsContainer";
       effectsContainer.className = "effects-container";
+      effectsContainer.style.position = "fixed";
+      effectsContainer.style.top = "0";
+      effectsContainer.style.left = "0";
+      effectsContainer.style.width = "100%";
+      effectsContainer.style.height = "100vh";
+      effectsContainer.style.zIndex = "30";
+      effectsContainer.style.pointerEvents = "none";
+      effectsContainer.style.overflow = "visible";
+
       // body에 직접 추가 (z-index가 올바르게 적용되도록)
       document.body.prepend(effectsContainer);
       console.log("새 효과 컨테이너 생성됨 (body에 추가됨)");
-
-      // z-index 확인 및 설정
-      effectsContainer.style.zIndex = "30";
       console.log("효과 컨테이너 z-index:", effectsContainer.style.zIndex);
     }
 

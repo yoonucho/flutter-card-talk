@@ -419,6 +419,57 @@ body {
   margin-bottom: 16px;
 }
 
+/* 새로운 오류 표시 스타일 */
+#errorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 235, 238, 0.97);
+  z-index: 9999;
+  padding: 20px;
+  text-align: center;
+  animation: error-fade-in 0.3s ease-in-out;
+}
+
+@keyframes error-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#errorContainer h2 {
+  color: #d32f2f;
+  font-size: 24px;
+  margin: 15px 0;
+  font-weight: 700;
+}
+
+#errorContainer p {
+  color: #555555;
+  font-size: 16px;
+  margin-bottom: 20px;
+  max-width: 80%;
+}
+
+#errorContainer button {
+  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#errorContainer button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* 하트 효과 - 새로운 정의 */
 .heart {
   position: absolute;
