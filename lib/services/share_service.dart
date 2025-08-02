@@ -58,21 +58,42 @@ class ShareService {
         'name': template.name,
         'emoji': template.emoji,
         'message': message,
-        'backgroundColor':
-            '# [${template.backgroundColor.value.toRadixString(16).substring(2)}',
-        'textColor':
-            '# [${template.textColor.value.toRadixString(16).substring(2)}',
+        'backgroundColor': '#${template.backgroundColor.value.toRadixString(16).substring(2)}',
+        'textColor': '#${template.textColor.value.toRadixString(16).substring(2)}',
       };
+      
+      // 디버깅을 위한 상세 로그
+      print('=== 공유 데이터 디버깅 ===');
+      print('template.name: ${template.name}');
+      print('template.emoji: ${template.emoji}');
+      print('message: $message');
+      print('template.backgroundColor: ${template.backgroundColor}');
+      print('template.backgroundColor.value: ${template.backgroundColor.value}');
+      print('backgroundColor hex: ${template.backgroundColor.value.toRadixString(16)}');
+      print('backgroundColor final: #${template.backgroundColor.value.toRadixString(16).substring(2)}');
+      print('template.textColor: ${template.textColor}');
+      print('template.textColor.value: ${template.textColor.value}');
+      print('textColor hex: ${template.textColor.value.toRadixString(16)}');
+      print('textColor final: #${template.textColor.value.toRadixString(16).substring(2)}');
       print('urlData: $urlData');
+      
       final jsonStr = jsonEncode(urlData);
       print('jsonStr: $jsonStr');
+      print('jsonStr 길이: ${jsonStr.length}');
+      
       final utf8Bytes = utf8.encode(jsonStr);
       print('utf8Bytes: $utf8Bytes');
+      print('utf8Bytes 길이: ${utf8Bytes.length}');
+      
       // 데이터를 Base64로 인코딩
       final encodedData = base64Encode(utf8Bytes);
       // 공백/줄바꿈 제거
       final cleanedData = encodedData.replaceAll(RegExp(r'\s+'), '');
       print('base64: $encodedData');
+      print('base64 길이: ${encodedData.length}');
+      print('cleanedData: $cleanedData');
+      print('========================');
+      
       // URL 안전하게 인코딩 (+ → -, / → _, = 제거)
       final urlSafeData = Uri.encodeComponent(cleanedData);
 
