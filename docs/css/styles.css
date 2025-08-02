@@ -24,17 +24,33 @@ body {
 }
 
 /* 공유 페이지 스타일 */
-.title {
+.container > .title {
   font-size: 24px;
   color: #333;
   margin-bottom: 20px;
   font-weight: 700;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.message {
+.container > .title.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.container > .message {
   font-size: 18px;
   color: #555;
   margin-bottom: 30px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.container > .message.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .button {
@@ -47,7 +63,14 @@ body {
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.button.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .button:hover {
@@ -154,6 +177,10 @@ body {
   transition: opacity 1s ease;
 }
 
+.card-container.show {
+  opacity: 1;
+}
+
 .card {
   background-color: white;
   border-radius: 24px;
@@ -178,18 +205,24 @@ body {
   display: inline-block;
 }
 
-.title {
+.card .title {
   font-size: 28px;
   font-weight: 700;
   color: #e91e63;
   margin-bottom: 24px;
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
-.message {
+.card .message {
   font-size: 18px;
   line-height: 1.8;
   margin-bottom: 30px;
   white-space: pre-wrap;
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 .footer {
