@@ -128,279 +128,216 @@ function loadCardData(shareId) {
   }
 }
 
-// Base64 디코딩 및 JSON 파싱 처리 (단일 책임 원칙)
+// Base64 디코딩 및 JSON 파싱 처리 (강화된 오류 복구)
 function decodeCardData(encodedData) {
-  // URL 디코딩 시도
-  const urlDecoded = tryUrlDecode(encodedData);
-
-  // Base64 디코딩 시도
-  const base64Data = normalizeBase64(urlDecoded);
-
-  // UTF-8 바이트 배열로 디코딩
-  const jsonString = decodeBase64ToUtf8(base64Data);
-
-  // JSON 파싱
-  return parseJsonSafely(jsonString);
+  console.log("디코딩 시작:", encodedData);
+  
+  try {
+    // 1단계: URL 디코딩
+    let decodedData;
+    try {
+      decodedData = decodeURIComponent(encodedData);
+    } catch (e) {
+      console.warn("URL 디코딩 실패, 원본 사용:", e);
+      decodedData = encodedData;
+    }
+    console.log("URL 디코딩 완료:", decodedData);
+    
+    // 2단계: Base64 문자열 정리 및 복구
+    let base64String = cleanBase64String(decodedData);
+    console.log("Base64 정리 완료:", base64String);
+    
+    // 3단계: Base64 → UTF-8 (여러 방법 시도)
+    const jsonString = decodeBase64WithFallback(base64String);
+    console.log("UTF-8 디코딩 완료:", jsonString);
+    
+    // 4단계: JSON 파싱 (색상 오류 수정 포함)
+    const cardData = parseJsonWithColorFix(jsonString);
+    console.log("JSON 파싱 완료:", cardData);
+    
+    return cardData;
+    
+  } catch (error) {
+    console.error("디코딩 오류:", error);
+    throw new Error(`카드 데이터 디코딩 실패: ${error.message}`);
+  }
 }
 
-// URL 디코딩 처리
-function tryUrlDecode(data) {
-  try {
-    return decodeURIComponent(data);
-  } catch (error) {
-    console.warn("URL 디코딩 실패, 원본 데이터 사용:", error);
-    return data;
+// Base64 문자열 정리 함수
+function cleanBase64String(base64Data) {
+  let cleaned = base64Data;
+  
+  // 1. 공백 및 개행 문자 제거
+  cleaned = cleaned.replace(/\s/g, "");
+  
+  // 2. Base64가 아닌 문자 제거 (알파벳, 숫자, +, /, = 만 유지)
+  cleaned = cleaned.replace(/[^A-Za-z0-9+/=]/g, "");
+  
+  // 3. URL-safe Base64 → 표준 Base64
+  cleaned = cleaned.replace(/-/g, "+").replace(/_/g, "/");
+  
+  // 4. 패딩 정규화
+  while (cleaned.length % 4) {
+    cleaned += "=";
   }
+  
+  console.log("Base64 정리:", base64Data.length, "→", cleaned.length);
+  
+  return cleaned;
 }
 
-// Base64 정규화 (URL-safe → 표준)
-function normalizeBase64(data) {
-  let base64String = data.replace(/-/g, "+").replace(/_/g, "/");
-
-  // 패딩 추가
-  while (base64String.length % 4) {
-    base64String += "=";
+// 여러 방법으로 Base64 디코딩 시도
+function decodeBase64WithFallback(base64String) {
+  const methods = [
+    // 방법 1: 표준 디코딩
+    () => decodeBase64Standard(base64String),
+    
+    // 방법 2: 부분 디코딩 (끝부분 잘림 대응)
+    () => decodeBase64Partial(base64String),
+    
+    // 방법 3: 강제 패딩 추가 후 디코딩
+    () => {
+      let padded = base64String;
+      while (padded.length % 4) padded += "=";
+      return decodeBase64Standard(padded);
+    }
+  ];
+  
+  for (let i = 0; i < methods.length; i++) {
+    try {
+      const result = methods[i]();
+      if (result && result.includes("{")) {
+        console.log(`디코딩 방법 ${i + 1} 성공`);
+        return result;
+      }
+    } catch (error) {
+      console.log(`디코딩 방법 ${i + 1} 실패:`, error.message);
+    }
   }
-
-  return base64String;
-}
-
-// Base64를 UTF-8 문자열로 디코딩 (오류 내성 강화)
-function decodeBase64ToUtf8(base64String) {
-  try {
-    // 1차 시도: 표준 방식
-    const result = decodeBase64Standard(base64String);
-    if (result) return result;
-  } catch (error) {
-    console.warn("표준 Base64 디코딩 실패:", error);
-  }
-
-  try {
-    // 2차 시도: 부분 디코딩
-    return decodeBase64Partial(base64String);
-  } catch (error) {
-    console.error("Base64 디코딩 완전 실패:", error);
-    throw new Error(`Base64 디코딩 실패: ${error.message}`);
-  }
+  
+  throw new Error("모든 디코딩 방법 실패");
 }
 
 // 표준 Base64 디코딩
 function decodeBase64Standard(base64String) {
-  // Base64 → 바이너리 문자열
   const binaryString = atob(base64String);
-
-  // 바이너리 문자열 → Uint8Array
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-
-  // UTF-8 디코딩
+  
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(bytes);
 }
 
-// 부분 Base64 디코딩 (오류 내성)
+// 부분 Base64 디코딩 (손상된 데이터 복구)
 function decodeBase64Partial(base64String) {
-  console.log("부분 Base64 디코딩 시작");
-
-  // Base64 문자열을 조금씩 줄여가며 디코딩 시도
-  for (let len = base64String.length; len > 10; len -= 4) {
+  // 끝에서부터 4바이트씩 제거하며 디코딩 시도
+  for (let len = base64String.length; len >= Math.max(20, base64String.length - 20); len -= 4) {
     try {
-      const partialBase64 = base64String.substring(0, len);
-
+      let partial = base64String.substring(0, len);
+      
       // 패딩 정규화
-      let normalizedBase64 = partialBase64;
-      while (normalizedBase64.length % 4) {
-        normalizedBase64 += "=";
+      while (partial.length % 4) {
+        partial += "=";
       }
-
-      const result = decodeBase64Standard(normalizedBase64);
-
-      // 최소한 JSON 시작 부분이 있는지 확인
-      if (result && result.includes('{"')) {
-        console.log(`부분 디코딩 성공 (길이: ${len}/${base64String.length})`);
+      
+      const result = decodeBase64Standard(partial);
+      
+      // 최소한 JSON 구조가 있는지 확인
+      if (result && result.includes('{"') && result.includes('"name"')) {
+        console.log(`부분 복구 성공: ${len}/${base64String.length} 바이트`);
         return result;
       }
-    } catch (error) {
-      // 이 길이로는 실패, 더 짧게 시도
+    } catch (e) {
       continue;
     }
   }
-
-  throw new Error("부분 디코딩도 실패");
+  
+  throw new Error("부분 디코딩 실패");
 }
 
-// 안전한 JSON 파싱 (부분 복구 지원)
-function parseJsonSafely(jsonString) {
+// JSON 파싱 (색상 오류 수정 포함)
+function parseJsonWithColorFix(jsonString) {
   try {
-    console.log("파싱할 JSON 문자열:", jsonString);
-
-    // 1단계: 정상 JSON 파싱 시도
-    const cleanedJson = cleanJsonString(jsonString);
-    console.log("정리된 JSON 문자열:", cleanedJson);
-
-    try {
-      const cardData = JSON.parse(cleanedJson);
-      console.log("파싱된 카드 데이터:", cardData);
-      validateCardData(cardData);
-      return cardData;
-    } catch (parseError) {
-      console.warn("정상 JSON 파싱 실패, 부분 복구 시도:", parseError);
-
-      // 2단계: 부분 복구 시스템
-      return parsePartialJson(jsonString);
+    // 색상 형식 오류 수정
+    let fixedJson = jsonString;
+    
+    // "# [색상값" → "#색상값" 패턴 수정
+    fixedJson = fixedJson.replace(/"#\s*\[([a-fA-F0-9]+)"/g, '"#$1"');
+    
+    // 색상값 뒤의 잘못된 문자 제거
+    fixedJson = fixedJson.replace(/"#([a-fA-F0-9]+)[^"]*"/g, '"#$1"');
+    
+    // 제어 문자 제거
+    fixedJson = fixedJson.replace(/[\x00-\x1F\x7F]/g, "");
+    
+    console.log("JSON 수정:", jsonString !== fixedJson ? "적용됨" : "불필요");
+    
+    const cardData = JSON.parse(fixedJson);
+    
+    // 색상 값 정리
+    if (cardData.backgroundColor) {
+      cardData.backgroundColor = sanitizeColor(cardData.backgroundColor);
     }
-  } catch (error) {
-    console.error("JSON 파싱 완전 실패:", error);
-    throw new Error(`JSON 파싱 실패: ${error.message}`);
-  }
-}
-
-// 부분 JSON 복구 시스템 (정규식 기반 필드 추출)
-function parsePartialJson(jsonString) {
-  console.log("부분 복구 시스템 시작");
-  console.log("전체 JSON 문자열 길이:", jsonString.length);
-  console.log("JSON 문자열 앞 100자:", jsonString.substring(0, 100));
-  console.log(
-    "JSON 문자열 뒤 100자:",
-    jsonString.substring(Math.max(0, jsonString.length - 100))
-  );
-
-  const cardData = {};
-
-  try {
-    // name 필드 추출
-    const nameMatch = jsonString.match(/"name"\s*:\s*"([^"]*?)"/);
-    if (nameMatch) {
-      cardData.name = nameMatch[1];
-      console.log("name 복구:", cardData.name);
+    if (cardData.textColor) {
+      cardData.textColor = sanitizeColor(cardData.textColor);
     }
-
-    // emoji 필드 추출 (이모지는 특수문자 포함)
-    const emojiMatch = jsonString.match(/"emoji"\s*:\s*"([^"]*?)"/);
-    if (emojiMatch) {
-      cardData.emoji = emojiMatch[1];
-      console.log("emoji 복구:", cardData.emoji);
-    }
-
-    // message 필드 추출 (깨진 문자 전까지만)
-    const messageMatch = jsonString.match(/"message"\s*:\s*"([^"]*)/);
-    if (messageMatch) {
-      let message = messageMatch[1];
-
-      // 유니코드 제어 문자나 깨진 문자가 시작되는 지점 찾기
-      const corruptIndex = message.search(
-        /[\u0000-\u001F\u007F-\u009F\u2000-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\uD800-\uDFFF]|[��]|[\uFFFD]/
-      );
-
-      if (corruptIndex !== -1) {
-        // 깨진 문자 전까지만 자르기
-        message = message.substring(0, corruptIndex);
-        console.log(`깨진 문자 감지, ${corruptIndex} 위치에서 자름`);
-      }
-
-      // 추가로 한글/영문/숫자/기본 특수문자만 유지 (더 엄격한 필터링)
-      message = message.replace(
-        /[^\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\u0020-\u007E\u00A0-\u00FF\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g,
-        ""
-      );
-
-      cardData.message = message.trim();
-      console.log("message 복구:", cardData.message);
-    }
-
-    // backgroundColor 필드 추출 시도 (다양한 패턴 시도)
-    console.log("backgroundColor 검색 시작...");
-
-    // 패턴 1: 표준 형식
-    let bgColorMatch = jsonString.match(/"backgroundColor"\s*:\s*"([^"]*?)"/);
-    console.log("패턴 1 결과:", bgColorMatch);
-
-    // 패턴 2: 따옴표 없이 끝나는 경우
-    if (!bgColorMatch) {
-      bgColorMatch = jsonString.match(/"backgroundColor"\s*:\s*"([^",}]*)/);
-      console.log("패턴 2 결과:", bgColorMatch);
-    }
-
-    // 패턴 3: 잘못된 형식 감지 ("# [색상값" 형태)
-    if (!bgColorMatch) {
-      bgColorMatch = jsonString.match(/"backgroundColor"\s*:\s*"([^"]*)/);
-      console.log("패턴 3 결과:", bgColorMatch);
-    }
-
-    if (bgColorMatch) {
-      console.log("backgroundColor 원본:", bgColorMatch[1]);
-      const color = sanitizeColor(bgColorMatch[1]);
-      if (color) {
-        cardData.backgroundColor = color;
-        console.log("backgroundColor 복구:", cardData.backgroundColor);
-      } else {
-        console.log("backgroundColor 정리 실패");
-      }
-    } else {
-      console.log("backgroundColor 패턴 매칭 실패");
-    }
-
-    // textColor 필드 추출 시도 (다양한 패턴 시도)
-    console.log("textColor 검색 시작...");
-
-    // 패턴 1: 표준 형식
-    let textColorMatch = jsonString.match(/"textColor"\s*:\s*"([^"]*?)"/);
-    console.log("패턴 1 결과:", textColorMatch);
-
-    // 패턴 2: 따옴표 없이 끝나는 경우
-    if (!textColorMatch) {
-      textColorMatch = jsonString.match(/"textColor"\s*:\s*"([^",}]*)/);
-      console.log("패턴 2 결과:", textColorMatch);
-    }
-
-    // 패턴 3: 잘못된 형식 감지
-    if (!textColorMatch) {
-      textColorMatch = jsonString.match(/"textColor"\s*:\s*"([^"]*)/);
-      console.log("패턴 3 결과:", textColorMatch);
-    }
-
-    if (textColorMatch) {
-      console.log("textColor 원본:", textColorMatch[1]);
-      const color = sanitizeColor(textColorMatch[1]);
-      if (color) {
-        cardData.textColor = color;
-        console.log("textColor 복구:", cardData.textColor);
-      } else {
-        console.log("textColor 정리 실패");
-      }
-    } else {
-      console.log("textColor 패턴 매칭 실패");
-    }
-
-    console.log("부분 복구 완료:", cardData);
-
-    // 색상 정보가 없는 경우 템플릿별 기본 색상 적용
-    if (!cardData.backgroundColor) {
-      // 템플릿 이름과 이모지를 기반으로 기본 색상 추정
-      const templateColors = getTemplateColors(cardData.name, cardData.emoji);
-      cardData.backgroundColor = templateColors.backgroundColor;
-      console.log("템플릿 기본 배경색 적용:", cardData.backgroundColor);
-    }
-
-    if (!cardData.textColor) {
-      const templateColors = getTemplateColors(cardData.name, cardData.emoji);
-      cardData.textColor = templateColors.textColor;
-      console.log("템플릿 기본 텍스트 색상 적용:", cardData.textColor);
-    }
-
-    // 최소 필드 확인
-    if (!cardData.name && !cardData.message) {
-      throw new Error("복구 가능한 필수 필드가 없습니다.");
-    }
-
+    
     return cardData;
-  } catch (error) {
-    console.error("부분 복구 실패:", error);
-    throw new Error(`부분 복구 실패: ${error.message}`);
+    
+  } catch (parseError) {
+    console.warn("JSON 파싱 실패, 정규식 복구 시도:", parseError);
+    
+    // 정규식으로 필드 추출
+    return extractFieldsWithRegex(jsonString);
   }
 }
+
+// 정규식으로 필드 추출 (최후의 수단)
+function extractFieldsWithRegex(jsonString) {
+  const cardData = {};
+  
+  // name 필드 추출
+  const nameMatch = jsonString.match(/"name"\s*:\s*"([^"]+)"/);
+  if (nameMatch) cardData.name = nameMatch[1];
+  
+  // emoji 필드 추출
+  const emojiMatch = jsonString.match(/"emoji"\s*:\s*"([^"]+)"/);
+  if (emojiMatch) cardData.emoji = emojiMatch[1];
+  
+  // message 필드 추출
+  const messageMatch = jsonString.match(/"message"\s*:\s*"([^"]+)"/);
+  if (messageMatch) cardData.message = messageMatch[1];
+  
+  // backgroundColor 필드 추출 및 정리
+  const bgMatch = jsonString.match(/"backgroundColor"\s*:\s*"([^"]+)"/);
+  if (bgMatch) {
+    const color = sanitizeColor(bgMatch[1]);
+    if (color) cardData.backgroundColor = color;
+  }
+  
+  // textColor 필드 추출 및 정리
+  const textMatch = jsonString.match(/"textColor"\s*:\s*"([^"]+)"/);
+  if (textMatch) {
+    const color = sanitizeColor(textMatch[1]);
+    if (color) cardData.textColor = color;
+  }
+  
+  // 기본값 설정
+  if (!cardData.backgroundColor) cardData.backgroundColor = "#ffffff";
+  if (!cardData.textColor) cardData.textColor = "#000000";
+  
+  console.log("정규식 추출 완료:", cardData);
+  
+  return cardData;
+}
+
+
+
+
+
+
 
 // 템플릿별 기본 색상 가져오기 함수 (실제 Flutter 템플릿 데이터 기반)
 function getTemplateColors(templateName, emoji) {
@@ -512,7 +449,7 @@ function getTemplateColors(templateName, emoji) {
     gratitude_001: {
       backgroundColor: "#EDE7F6",
       textColor: "#512DA8",
-      emoji: "�",
+      emoji: "🙏",
       name: "감사 인사",
     },
     gratitude_002: {
@@ -591,16 +528,13 @@ function getTemplateColors(templateName, emoji) {
     else if (
       emoji.includes("🎂") ||
       emoji.includes("🎈") ||
-      emoji.includes("�") ||
+      emoji.includes("🎁") ||
       emoji.includes("🍰") ||
       emoji.includes("🎀") ||
       emoji.includes("🎯")
     ) {
       console.log("생일 카테고리 유사 매칭");
-      return {
-        backgroundColor: templates.birthday_001.backgroundColor,
-        textColor: templates.birthday_001.textColor,
-      };
+      return templates.birthday_001;
     }
     // 위로 관련 이모지들
     else if (
@@ -612,25 +546,19 @@ function getTemplateColors(templateName, emoji) {
       emoji.includes("🌈")
     ) {
       console.log("위로 카테고리 유사 매칭");
-      return {
-        backgroundColor: templates.comfort_001.backgroundColor,
-        textColor: templates.comfort_001.textColor,
-      };
+      return templates.comfort_001;
     }
     // 우정 관련 이모지들
     else if (
-      emoji.includes("�") ||
-      emoji.includes("�") ||
+      emoji.includes("👫") ||
+      emoji.includes("🤝") ||
       emoji.includes("📸") ||
       emoji.includes("👭") ||
       emoji.includes("👬") ||
       emoji.includes("🤗")
     ) {
       console.log("우정 카테고리 유사 매칭");
-      return {
-        backgroundColor: templates.friendship_001.backgroundColor,
-        textColor: templates.friendship_001.textColor,
-      };
+      return templates.friendship_001;
     }
     // 감사 관련 이모지들
     else if (
@@ -725,30 +653,7 @@ function getTemplateColors(templateName, emoji) {
   };
 }
 
-// JSON 문자열 정리 및 보정
-function cleanJsonString(jsonString) {
-  let cleaned = jsonString.trim();
 
-  // 잘못된 색상 형식 수정
-  cleaned = cleaned.replace(/"# \[([a-fA-F0-9]+)"/g, '"#$1"');
-  cleaned = cleaned.replace(/([a-fA-F0-9]+)"\}/g, '$1"}');
-
-  // 제어 문자 제거
-  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, "");
-
-  return cleaned;
-}
-
-// 카드 데이터 유효성 검증
-function validateCardData(cardData) {
-  if (!cardData || typeof cardData !== "object") {
-    throw new Error("카드 데이터가 올바른 객체가 아닙니다.");
-  }
-
-  if (!cardData.name && !cardData.message) {
-    throw new Error("카드 데이터에 필수 필드(name 또는 message)가 없습니다.");
-  }
-}
 
 // 카드 표시 함수
 function displayCard(cardData) {

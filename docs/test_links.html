@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카드 링크 테스트</title>
+    <style>
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-link {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f0f8ff;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            transition: background-color 0.3s;
+        }
+        .test-link:hover {
+            background-color: #e6f3ff;
+        }
+        .link-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .link-desc {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .link-url {
+            font-family: monospace;
+            font-size: 12px;
+            color: #888;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>카드 뷰어 테스트 링크</h1>
+    <p>아래 링크들을 클릭하여 카드 파싱이 제대로 작동하는지 확인하세요.</p>
+    
+    <a href="view.html?id=test1&data=eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=" class="test-link" target="_blank">
+        <div class="link-title">테스트 1: 응원 카드</div>
+        <div class="link-desc">원본 문제가 있던 Base64 데이터</div>
+        <div class="link-url">view.html?id=test1&data=eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</div>
+    </a>
+
+    <a href="view.html?id=test2&data=eyJuYW1lIjoi7IKs656R6rOg67Cx7IucIiwiZW1vamkiOiLwn5KVIiwibWVzc2FnZSI6Iuu5ueyLoOydhCDsgqzrnpHtlanripQu64ml6yKsXG5cbuq4nOyyrO2VmOuLmCDrqo3rsoEg7IiY6rCAIOuGiemYgOyWmOyekSfslJouIiwiYmFja2dyb3VuZENvbG9yIjoiI0ZGRTRFNiIsInRleHRDb2xvciI6IiNFOTFFNjMifQ==" class="test-link" target="_blank">
+        <div class="link-title">테스트 2: 사랑 고백 카드</div>
+        <div class="link-desc">새로 생성한 사랑 테마 카드</div>
+        <div class="link-url">view.html?id=test2&data=eyJuYW1lIjoi7IKs656R6rOg67Cx7IucIiwiZW1vamkiOiLwn5KVIiwibWVzc2FnZSI6Iuu5ueyLoOydhCDsgqzrnpHtlanripQu64ml6yKsXG5cbuq4nOyyrO2VmOuLmCDrqo3rsoEg7IiY6rCAIOuGiemYgOyWmOyekyIiLCJiYWNrZ3JvdW5kQ29sb3IiOiIjRkZFNEU2IiwidGV4dENvbG9yIjoiI0U5MUU2MyJ9</div>
+    </a>
+
+    <a href="view.html?id=test3&data=eyJuYW1lIjoi7IOd7J2867Ge7LaIIiwiZW1vamkiOiLwn46CIiwibWVzc2FnZSI6Iuu9uOyehCDsoJrsgqDrpbTsqJDsmpQhIPCfjonhbrxcblxu6rqc67O17ZWcIO2VmOuLpCDtlZjshqzsmpQhIiwiYmFja2dyb3VuZENvbG9yIjoiI0U4RjVFOCIsInRleHRDb2xvciI6IiMyRTdEMzIifQ==" class="test-link" target="_blank">
+        <div class="link-title">테스트 3: 생일 축하 카드</div>
+        <div class="link-desc">새로 생성한 생일 테마 카드</div>
+        <div class="link-url">view.html?id=test3&data=eyJuYW1lIjoi7IOd7J2867Ge7LaIIiwiZW1vamkiOiLwn46CIiwibWVzc2FnZSI6Iuu9uOyehCDsoJrsgqDrpbTsqJDsmpQhIPCfjonhbrxcblxu6rqc67O17ZWcIO2VmOuLpCDtlZjshqzsmpQhIiwiYmFja2dyb3VuZENvbG9yIjoiI0U4RjVFOCIsInRleHRDb2xvciI6IiMyRTdEMzIifQ==</div>
+    </a>
+
+    <hr>
+
+    <h2>디버그 모드</h2>
+    <p>아래 링크는 debug=true 파라미터가 포함되어 있어 상세한 오류 정보를 확인할 수 있습니다.</p>
+
+    <a href="view.html?id=debug1&data=eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=&debug=true" class="test-link" target="_blank">
+        <div class="link-title">디버그 모드: 응원 카드</div>
+        <div class="link-desc">상세한 오류 정보와 함께 테스트</div>
+        <div class="link-url">view.html?id=debug1&data=...&debug=true</div>
+    </a>
+
+    <hr>
+
+    <h2>간단한 테스트</h2>
+    <a href="test_simple.html" class="test-link" target="_blank">
+        <div class="link-title">브라우저 디코딩 테스트</div>
+        <div class="link-desc">브라우저에서 직접 Base64 디코딩 테스트</div>
+    </a>
+
+    <script>
+        // Base64 인코딩 함수들
+        function createBase64(jsonData) {
+            const encoder = new TextEncoder();
+            const utf8Bytes = encoder.encode(JSON.stringify(jsonData));
+            let binaryString = "";
+            utf8Bytes.forEach(byte => {
+                binaryString += String.fromCharCode(byte);
+            });
+            return btoa(binaryString);
+        }
+
+        // 테스트 데이터 생성
+        console.log("=== 테스트 데이터 생성 ===");
+        
+        const loveCard = {
+            "name": "사랑 고백",
+            "emoji": "💕",
+            "message": "당신을 사랑합니다.\n\n함께하는 모든 순간이 행복해요!",
+            "backgroundColor": "#FFE4E6",
+            "textColor": "#E91E63"
+        };
+        
+        const birthdayCard = {
+            "name": "생일 축하",
+            "emoji": "🎂",
+            "message": "생일 축하해요! 🎉\n\n행복한 하루 되세요!",
+            "backgroundColor": "#E8F5E8",
+            "textColor": "#2E7D32"
+        };
+
+        console.log("사랑 카드 Base64:", createBase64(loveCard));
+        console.log("생일 카드 Base64:", createBase64(birthdayCard));
+    </script>
+</body>
+</html>

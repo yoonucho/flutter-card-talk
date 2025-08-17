@@ -1,271 +1,300 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>인코딩/디코딩 테스트</title>
     <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .section {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        pre {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-        }
-        .error {
-            color: red;
-        }
-        .success {
-            color: green;
-        }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .section {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      pre {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>인코딩/디코딩 테스트</h1>
-    
+
     <div class="container">
-        <div class="section">
-            <h2>문제 URL 테스트</h2>
-            <textarea id="problemUrl" placeholder="테스트할 URL을 입력하세요">https://yoonucho.github.io/flutter-card-talk/view.html?id=f511e71a-6f66-4574-9163-f03cd0716848&data=eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</textarea>
-            <button onclick="testProblemUrl()">URL 테스트</button>
-            <div>
-                <h3>결과:</h3>
-                <pre id="urlResult">여기에 결과가 표시됩니다.</pre>
-            </div>
+      <div class="section">
+        <h2>문제 URL 테스트</h2>
+        <textarea id="problemUrl" placeholder="테스트할 URL을 입력하세요">
+https://yoonucho.github.io/flutter-card-talk/view.html?id=f511e71a-6f66-4574-9163-f03cd0716848&data=eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</textarea
+        >
+        <button onclick="testProblemUrl()">URL 테스트</button>
+        <div>
+          <h3>결과:</h3>
+          <pre id="urlResult">여기에 결과가 표시됩니다.</pre>
         </div>
+      </div>
 
-        <div class="section">
-            <h2>JSON → Base64 인코딩</h2>
-            <textarea id="jsonInput" placeholder="JSON 데이터 입력">{"name":"응원","emoji":"💪","message":"당신은 충분히 잘하고 있어요! 💪 힘내세요\n\n화이팅!","backgroundColor":"#e8eaf6","textColor":"#3f51b5"}</textarea>
-            <button onclick="encodeBase64()">인코딩</button>
-            <div>
-                <h3>Base64 결과:</h3>
-                <pre id="base64Result">여기에 결과가 표시됩니다.</pre>
-            </div>
+      <div class="section">
+        <h2>JSON → Base64 인코딩</h2>
+        <textarea id="jsonInput" placeholder="JSON 데이터 입력">
+{"name":"응원","emoji":"💪","message":"당신은 충분히 잘하고 있어요! 💪 힘내세요\n\n화이팅!","backgroundColor":"#e8eaf6","textColor":"#3f51b5"}</textarea
+        >
+        <button onclick="encodeBase64()">인코딩</button>
+        <div>
+          <h3>Base64 결과:</h3>
+          <pre id="base64Result">여기에 결과가 표시됩니다.</pre>
         </div>
+      </div>
 
-        <div class="section">
-            <h2>Base64 → JSON 디코딩</h2>
-            <textarea id="base64Input" placeholder="Base64 데이터 입력">eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</textarea>
-            <button onclick="decodeBase64()">디코딩</button>
-            <div>
-                <h3>디코딩 결과:</h3>
-                <pre id="decodedResult">여기에 결과가 표시됩니다.</pre>
-            </div>
+      <div class="section">
+        <h2>Base64 → JSON 디코딩</h2>
+        <textarea id="base64Input" placeholder="Base64 데이터 입력">
+eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=</textarea
+        >
+        <button onclick="decodeBase64()">디코딩</button>
+        <div>
+          <h3>디코딩 결과:</h3>
+          <pre id="decodedResult">여기에 결과가 표시됩니다.</pre>
         </div>
+      </div>
     </div>
 
     <script>
-        // UTF-8 문자열을 Base64로 인코딩하는 함수
-        function utf8ToBase64(str) {
-            try {
-                const encoder = new TextEncoder();
-                const utf8Bytes = encoder.encode(str);
-                let binaryString = '';
-                utf8Bytes.forEach(byte => {
-                    binaryString += String.fromCharCode(byte);
-                });
-                return btoa(binaryString);
-            } catch (e) {
-                console.error("UTF-8 인코딩 오류:", e);
-                return null;
-            }
+      // UTF-8 문자열을 Base64로 인코딩하는 함수
+      function utf8ToBase64(str) {
+        try {
+          const encoder = new TextEncoder();
+          const utf8Bytes = encoder.encode(str);
+          let binaryString = "";
+          utf8Bytes.forEach((byte) => {
+            binaryString += String.fromCharCode(byte);
+          });
+          return btoa(binaryString);
+        } catch (e) {
+          console.error("UTF-8 인코딩 오류:", e);
+          return null;
         }
+      }
 
-        // Base64를 UTF-8 문자열로 디코딩하는 함수
-        function base64ToUtf8(base64) {
+      // Base64를 UTF-8 문자열로 디코딩하는 함수
+      function base64ToUtf8(base64) {
+        try {
+          // 방법 1: TextDecoder 사용
+          try {
+            // Base64를 바이너리 문자열로 디코딩
+            const binaryString = atob(base64);
+            console.log("바이너리 문자열 길이:", binaryString.length);
+
+            // 바이너리 문자열을 Uint8Array로 변환
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            console.log("Uint8Array 생성 완료:", bytes.length);
+
+            // TextDecoder를 사용하여 UTF-8로 디코딩
+            const decoder = new TextDecoder("utf-8");
+            const result = decoder.decode(bytes);
+            console.log("TextDecoder 디코딩 결과:", result);
+            return result;
+          } catch (textDecoderError) {
+            console.error("TextDecoder 오류:", textDecoderError);
+
+            // 방법 2: 수동 디코딩 시도
             try {
-                // 방법 1: TextDecoder 사용
-                try {
-                    // Base64를 바이너리 문자열로 디코딩
-                    const binaryString = atob(base64);
-                    console.log("바이너리 문자열 길이:", binaryString.length);
-                    
-                    // 바이너리 문자열을 Uint8Array로 변환
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    console.log("Uint8Array 생성 완료:", bytes.length);
-                    
-                    // TextDecoder를 사용하여 UTF-8로 디코딩
-                    const decoder = new TextDecoder('utf-8');
-                    const result = decoder.decode(bytes);
-                    console.log("TextDecoder 디코딩 결과:", result);
-                    return result;
-                } catch (textDecoderError) {
-                    console.error("TextDecoder 오류:", textDecoderError);
-                    
-                    // 방법 2: 수동 디코딩 시도
-                    try {
-                        const binaryString = atob(base64);
-                        let result = '';
-                        let i = 0;
-                        
-                        while (i < binaryString.length) {
-                            let c = binaryString.charCodeAt(i);
-                            
-                            if (c < 128) {
-                                // ASCII 문자
-                                result += String.fromCharCode(c);
-                                i++;
-                            } else if (c > 191 && c < 224) {
-                                // 2바이트 문자
-                                const c2 = binaryString.charCodeAt(i + 1);
-                                result += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-                                i += 2;
-                            } else {
-                                // 3바이트 문자
-                                const c2 = binaryString.charCodeAt(i + 1);
-                                const c3 = binaryString.charCodeAt(i + 2);
-                                result += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-                                i += 3;
-                            }
-                        }
-                        
-                        console.log("수동 디코딩 결과:", result);
-                        return result;
-                    } catch (manualError) {
-                        console.error("수동 디코딩 오류:", manualError);
-                        throw manualError;
-                    }
+              const binaryString = atob(base64);
+              let result = "";
+              let i = 0;
+
+              while (i < binaryString.length) {
+                let c = binaryString.charCodeAt(i);
+
+                if (c < 128) {
+                  // ASCII 문자
+                  result += String.fromCharCode(c);
+                  i++;
+                } else if (c > 191 && c < 224) {
+                  // 2바이트 문자
+                  const c2 = binaryString.charCodeAt(i + 1);
+                  result += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                  i += 2;
+                } else {
+                  // 3바이트 문자
+                  const c2 = binaryString.charCodeAt(i + 1);
+                  const c3 = binaryString.charCodeAt(i + 2);
+                  result += String.fromCharCode(
+                    ((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63)
+                  );
+                  i += 3;
                 }
-            } catch (e) {
-                console.error("Base64 디코딩 오류:", e);
-                throw e;
+              }
+
+              console.log("수동 디코딩 결과:", result);
+              return result;
+            } catch (manualError) {
+              console.error("수동 디코딩 오류:", manualError);
+              throw manualError;
             }
+          }
+        } catch (e) {
+          console.error("Base64 디코딩 오류:", e);
+          throw e;
         }
+      }
 
-        // URL에서 데이터 추출 및 테스트
-        function testProblemUrl() {
-            try {
-                const urlString = document.getElementById("problemUrl").value;
-                const url = new URL(urlString);
-                const urlParams = new URLSearchParams(url.search);
-                const encodedData = urlParams.get("data");
-                
-                if (!encodedData) {
-                    document.getElementById("urlResult").innerHTML = "<span class='error'>URL에서 data 파라미터를 찾을 수 없습니다.</span>";
-                    return;
-                }
+      // URL에서 데이터 추출 및 테스트
+      function testProblemUrl() {
+        try {
+          const urlString = document.getElementById("problemUrl").value;
+          const url = new URL(urlString);
+          const urlParams = new URLSearchParams(url.search);
+          const encodedData = urlParams.get("data");
 
-                document.getElementById("urlResult").innerHTML = 
-                    `<strong>인코딩된 데이터:</strong> ${encodedData}\n\n` +
-                    `<strong>URL 디코딩:</strong> ${decodeURIComponent(encodedData)}\n\n`;
+          if (!encodedData) {
+            document.getElementById("urlResult").innerHTML =
+              "<span class='error'>URL에서 data 파라미터를 찾을 수 없습니다.</span>";
+            return;
+          }
 
-                try {
-                    // URL 디코딩 먼저 수행
-                    const urlDecoded = decodeURIComponent(encodedData);
-                    
-                    // URL 안전 Base64를 표준 Base64로 변환 (- → +, _ → /, 패딩 추가)
-                    let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
-                    // 패딩 추가
-                    while (base64Data.length % 4) {
-                        base64Data += "=";
-                    }
-                    
-                    // UTF-8 지원 Base64 디코딩
-                    const jsonData = base64ToUtf8(base64Data);
-                    const cardData = JSON.parse(jsonData);
-                    
-                    document.getElementById("urlResult").innerHTML += 
-                        `<strong>디코딩 성공!</strong>\n` +
-                        `<strong>JSON 데이터:</strong>\n${JSON.stringify(cardData, null, 2)}`;
-                } catch (error) {
-                    document.getElementById("urlResult").innerHTML += 
-                        `<span class='error'><strong>디코딩 오류:</strong> ${error.message}</span>`;
-                }
-            } catch (error) {
-                document.getElementById("urlResult").innerHTML = 
-                    `<span class='error'><strong>오류:</strong> ${error.message}</span>`;
+          document.getElementById("urlResult").innerHTML =
+            `<strong>인코딩된 데이터:</strong> ${encodedData}\n\n` +
+            `<strong>URL 디코딩:</strong> ${decodeURIComponent(
+              encodedData
+            )}\n\n`;
+
+          try {
+            // URL 디코딩 먼저 수행
+            const urlDecoded = decodeURIComponent(encodedData);
+
+            // URL 안전 Base64를 표준 Base64로 변환 (- → +, _ → /, 패딩 추가)
+            let base64Data = urlDecoded.replace(/-/g, "+").replace(/_/g, "/");
+            // 패딩 추가
+            while (base64Data.length % 4) {
+              base64Data += "=";
             }
-        }
 
-        // JSON → Base64 인코딩
-        function encodeBase64() {
-            const jsonData = document.getElementById("jsonInput").value;
-            try {
-                // JSON 파싱 테스트
-                JSON.parse(jsonData);
-                
-                // UTF-8 Base64 인코딩
-                const encoded = utf8ToBase64(jsonData);
-                document.getElementById("base64Result").innerHTML = encoded;
-                
-                // URL 안전 인코딩
-                document.getElementById("base64Result").innerHTML += 
-                    `\n\n<strong>URL 안전 인코딩:</strong>\n${encodeURIComponent(encoded)}`;
-                return encoded;
-            } catch (e) {
-                document.getElementById("base64Result").innerHTML = 
-                    `<span class='error'><strong>오류:</strong> ${e.message}</span>`;
-                return null;
-            }
-        }
+            // UTF-8 지원 Base64 디코딩
+            const jsonData = base64ToUtf8(base64Data);
+            const cardData = JSON.parse(jsonData);
 
-        // Base64 → JSON 디코딩
-        function decodeBase64() {
-            const base64Data = document.getElementById("base64Input").value;
-            try {
-                // URL 디코딩 시도
-                let decodedData;
-                try {
-                    decodedData = decodeURIComponent(base64Data);
-                    document.getElementById("decodedResult").innerHTML = 
-                        `<strong>URL 디코딩 결과:</strong>\n${decodedData}\n\n`;
-                } catch (e) {
-                    document.getElementById("decodedResult").innerHTML = 
-                        `<span class='error'><strong>URL 디코딩 오류:</strong> ${e.message}</span>\n` +
-                        `<strong>원본 사용:</strong>\n${base64Data}\n\n`;
-                    decodedData = base64Data;
-                }
-                
-                // Base64 디코딩
-                const jsonData = base64ToUtf8(decodedData);
-                document.getElementById("decodedResult").innerHTML += 
-                    `<strong>Base64 디코딩 결과:</strong>\n${jsonData}\n\n`;
-                
-                // JSON 파싱
-                const parsedData = JSON.parse(jsonData);
-                document.getElementById("decodedResult").innerHTML += 
-                    `<strong>JSON 파싱 성공!</strong>\n${JSON.stringify(parsedData, null, 2)}`;
-            } catch (e) {
-                document.getElementById("decodedResult").innerHTML += 
-                    `<span class='error'><strong>오류:</strong> ${e.message}</span>`;
-            }
+            document.getElementById("urlResult").innerHTML +=
+              `<strong>디코딩 성공!</strong>\n` +
+              `<strong>JSON 데이터:</strong>\n${JSON.stringify(
+                cardData,
+                null,
+                2
+              )}`;
+          } catch (error) {
+            document.getElementById(
+              "urlResult"
+            ).innerHTML += `<span class='error'><strong>디코딩 오류:</strong> ${error.message}</span>`;
+          }
+        } catch (error) {
+          document.getElementById(
+            "urlResult"
+          ).innerHTML = `<span class='error'><strong>오류:</strong> ${error.message}</span>`;
         }
+      }
+
+      // JSON → Base64 인코딩
+      function encodeBase64() {
+        const jsonData = document.getElementById("jsonInput").value;
+        try {
+          // JSON 파싱 테스트
+          JSON.parse(jsonData);
+
+          // UTF-8 Base64 인코딩
+          const encoded = utf8ToBase64(jsonData);
+          document.getElementById("base64Result").innerHTML = encoded;
+
+          // URL 안전 인코딩
+          document.getElementById(
+            "base64Result"
+          ).innerHTML += `\n\n<strong>URL 안전 인코딩:</strong>\n${encodeURIComponent(
+            encoded
+          )}`;
+          return encoded;
+        } catch (e) {
+          document.getElementById(
+            "base64Result"
+          ).innerHTML = `<span class='error'><strong>오류:</strong> ${e.message}</span>`;
+          return null;
+        }
+      }
+
+      // Base64 → JSON 디코딩
+      function decodeBase64() {
+        const base64Data = document.getElementById("base64Input").value;
+        try {
+          // URL 디코딩 시도
+          let decodedData;
+          try {
+            decodedData = decodeURIComponent(base64Data);
+            document.getElementById(
+              "decodedResult"
+            ).innerHTML = `<strong>URL 디코딩 결과:</strong>\n${decodedData}\n\n`;
+          } catch (e) {
+            document.getElementById("decodedResult").innerHTML =
+              `<span class='error'><strong>URL 디코딩 오류:</strong> ${e.message}</span>\n` +
+              `<strong>원본 사용:</strong>\n${base64Data}\n\n`;
+            decodedData = base64Data;
+          }
+
+          // Base64 디코딩
+          const jsonData = base64ToUtf8(decodedData);
+          document.getElementById(
+            "decodedResult"
+          ).innerHTML += `<strong>Base64 디코딩 결과:</strong>\n${jsonData}\n\n`;
+
+          // JSON 파싱
+          const parsedData = JSON.parse(jsonData);
+          document.getElementById(
+            "decodedResult"
+          ).innerHTML += `<strong>JSON 파싱 성공!</strong>\n${JSON.stringify(
+            parsedData,
+            null,
+            2
+          )}`;
+        } catch (e) {
+          document.getElementById(
+            "decodedResult"
+          ).innerHTML += `<span class='error'><strong>오류:</strong> ${e.message}</span>`;
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

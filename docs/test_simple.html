@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 카드 테스트</title>
+    <style>
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .emoji {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .message {
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>카드 디코딩 테스트</h1>
+    
+    <div>
+        <h2>테스트 데이터:</h2>
+        <button onclick="testCard1()">테스트 1: 응원 카드</button>
+        <button onclick="testCard2()">테스트 2: 사랑 카드</button>
+        <button onclick="testCard3()">테스트 3: 생일 카드</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        // 간단한 디코딩 함수
+        function decodeCardData(encodedData) {
+            console.log("디코딩 시작:", encodedData);
+            
+            try {
+                // 1단계: URL 디코딩
+                let decodedData = decodeURIComponent(encodedData);
+                console.log("URL 디코딩 완료:", decodedData);
+                
+                // 2단계: Base64 정규화 (URL-safe → 표준)
+                let base64String = decodedData.replace(/-/g, "+").replace(/_/g, "/");
+                // 패딩 추가
+                while (base64String.length % 4) {
+                    base64String += "=";
+                }
+                console.log("Base64 정규화 완료:", base64String);
+                
+                // 3단계: Base64 → UTF-8
+                const binaryString = atob(base64String);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                const decoder = new TextDecoder("utf-8");
+                const jsonString = decoder.decode(bytes);
+                console.log("UTF-8 디코딩 완료:", jsonString);
+                
+                // 4단계: JSON 파싱
+                const cardData = JSON.parse(jsonString);
+                console.log("JSON 파싱 완료:", cardData);
+                
+                return cardData;
+                
+            } catch (error) {
+                console.error("디코딩 오류:", error);
+                throw new Error(`카드 데이터 디코딩 실패: ${error.message}`);
+            }
+        }
+
+        function displayResult(cardData, error = null) {
+            const resultDiv = document.getElementById('result');
+            
+            if (error) {
+                resultDiv.innerHTML = `
+                    <div class="test-card">
+                        <div class="error">오류 발생: ${error}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="test-card" style="background-color: ${cardData.backgroundColor || '#ffffff'}; color: ${cardData.textColor || '#000000'}">
+                    <div class="emoji">${cardData.emoji || '💌'}</div>
+                    <div class="title">${cardData.name || '제목 없음'}</div>
+                    <div class="message">${cardData.message || '메시지 없음'}</div>
+                </div>
+                <div class="success">✅ 디코딩 성공!</div>
+                <pre>${JSON.stringify(cardData, null, 2)}</pre>
+            `;
+        }
+
+        function testCard1() {
+            // 응원 카드 테스트
+            const testData = "eyJuYW1lIjoi7J2R7JuQIiwiZW1vamkiOiLwn5KqIiwibWVzc2FnZSI6IuuLueyLoOydgCDstqnrtoTtnogg7J6Y7ZWY6rOgIOyeiOyWtOyalCEg8J+SqiDtnpjrgrTshLjsmpRcblxu7ZmU7J207YyFISIsImJhY2tncm91bmRDb2xvciI6IiNlOGVhZjYiLCJ0ZXh0Q29sb3IiOiIjM2Y1MWI1In0=";
+            
+            try {
+                const cardData = decodeCardData(testData);
+                displayResult(cardData);
+            } catch (error) {
+                displayResult(null, error.message);
+            }
+        }
+
+        function testCard2() {
+            // 사랑 카드 테스트 (새로 생성)
+            const testJson = JSON.stringify({
+                "name": "사랑 고백",
+                "emoji": "💕",
+                "message": "당신을 사랑합니다.\n\n함께하는 모든 순간이 행복해요! 💕",
+                "backgroundColor": "#FFE4E6",
+                "textColor": "#E91E63"
+            });
+            
+            // UTF-8 → Base64 인코딩
+            const encoder = new TextEncoder();
+            const utf8Bytes = encoder.encode(testJson);
+            let binaryString = "";
+            utf8Bytes.forEach(byte => {
+                binaryString += String.fromCharCode(byte);
+            });
+            const encoded = btoa(binaryString);
+            
+            console.log("새로 생성한 Base64:", encoded);
+            
+            try {
+                const cardData = decodeCardData(encoded);
+                displayResult(cardData);
+            } catch (error) {
+                displayResult(null, error.message);
+            }
+        }
+
+        function testCard3() {
+            // 생일 카드 테스트 (새로 생성)
+            const testJson = JSON.stringify({
+                "name": "생일 축하",
+                "emoji": "🎂",
+                "message": "생일 축하해요! 🎉\n\n행복한 하루 되세요!",
+                "backgroundColor": "#E8F5E8",
+                "textColor": "#2E7D32"
+            });
+            
+            // UTF-8 → Base64 인코딩
+            const encoder = new TextEncoder();
+            const utf8Bytes = encoder.encode(testJson);
+            let binaryString = "";
+            utf8Bytes.forEach(byte => {
+                binaryString += String.fromCharCode(byte);
+            });
+            const encoded = btoa(binaryString);
+            
+            console.log("새로 생성한 Base64:", encoded);
+            
+            try {
+                const cardData = decodeCardData(encoded);
+                displayResult(cardData);
+            } catch (error) {
+                displayResult(null, error.message);
+            }
+        }
+    </script>
+</body>
+</html>
