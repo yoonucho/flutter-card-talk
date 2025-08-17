@@ -27,6 +27,7 @@ dependencies:
 
   # 애니메이션
   lottie: ^3.1.0
+  confetti: ^0.7.0
 
   # 로컬 서버 구현
   shelf: ^1.4.1

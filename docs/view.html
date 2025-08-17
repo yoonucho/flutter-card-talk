@@ -22,6 +22,9 @@
     <!-- js-base64 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
 
+    <!-- confetti 애니메이션 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
     <!-- TextEncoder/TextDecoder Polyfill -->
     <script>
       // TextEncoder/TextDecoder Polyfill for older browsers
@@ -161,6 +164,13 @@
           <div id="message" class="message">카드 메시지</div>
           <div class="footer">
             <p>소중한 마음이 담긴 카드입니다</p>
+            <button
+              onclick="sendGratitudeToApp()"
+              class="confetti-button"
+              style="margin-top: 15px"
+            >
+              💝 고마운 마음 전하기
+            </button>
           </div>
         </div>
 

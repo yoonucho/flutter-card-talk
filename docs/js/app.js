@@ -922,8 +922,70 @@ function startCardAnimation() {
     cardContainer.classList.add("show");
     setTimeout(() => {
       card.classList.add("show");
+
+      // 색종이 애니메이션 시작
+      startConfettiAnimation();
     }, 300);
   }, 100);
+}
+
+// 색종이 애니메이션 함수
+function startConfettiAnimation() {
+  // confetti 라이브러리가 로드되었는지 확인
+  if (typeof confetti === "undefined") {
+    console.log("Confetti 라이브러리가 로드되지 않았습니다.");
+    return;
+  }
+
+  // 첫 번째 색종이 폭발 (중앙에서)
+  setTimeout(() => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: [
+        "#ff9ff3",
+        "#ff6b9d",
+        "#ff8cc8",
+        "#ffadd6",
+        "#ffc2e2",
+        "#ffe0f0",
+      ],
+    });
+  }, 200);
+
+  // 두 번째 색종이 폭발 (왼쪽에서)
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: ["#ff9aac", "#ffb3c1", "#ffc9d6", "#ffe0eb"],
+    });
+  }, 400);
+
+  // 세 번째 색종이 폭발 (오른쪽에서)
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: ["#ff6b9d", "#ff8cc8", "#ffadd6", "#ffc2e2"],
+    });
+  }, 600);
+
+  // 마지막 작은 색종이들 (위에서 떨어지는 효과)
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      spread: 120,
+      origin: { y: 0.3 },
+      gravity: 0.8,
+      colors: ["#ff9ff3", "#ff9aac", "#ffb3c1", "#ffc9d6"],
+    });
+  }, 800);
 }
 
 // 기본 카드 표시 함수
@@ -983,4 +1045,85 @@ function showError(message) {
     errorMessageElement.textContent = userFriendlyMessage;
   }
   errorElement.style.display = "block";
+}
+
+// 고마운 마음을 앱으로 전하기 함수
+function sendGratitudeToApp() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const shareId = urlParams.get("id");
+  const encodedData = urlParams.get("data");
+
+  // 딥링크 생성
+  const deepLink = `cardtalk://gratitude?id=${shareId}&data=${encodedData}`;
+
+  // 페이지가 백그라운드로 가는지 감지
+  let appOpened = false;
+
+  // visibilitychange 이벤트로 앱이 열렸는지 감지
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      appOpened = true;
+    }
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  // 딥링크 실행
+  try {
+    window.location.href = deepLink;
+  } catch (error) {
+    console.error("딥링크 실행 오류:", error);
+    showAppNotInstalledMessage();
+    return;
+  }
+
+  // 1초 후 앱이 열리지 않았으면 메시지 표시
+  setTimeout(() => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+    if (!appOpened) {
+      showAppNotInstalledMessage();
+    }
+  }, 1000);
+}
+
+// 앱이 설치되지 않았을 때 메시지 표시
+function showAppNotInstalledMessage() {
+  // 기존 알림이 있다면 제거
+  const existingAlert = document.getElementById("appNotInstalledAlert");
+  if (existingAlert) {
+    existingAlert.remove();
+  }
+
+  // 새로운 알림 창 생성
+  const alertDiv = document.createElement("div");
+  alertDiv.id = "appNotInstalledAlert";
+  alertDiv.className = "app-modal";
+
+  alertDiv.innerHTML = `
+    <div class="app-modal-content">
+      <h3>📱 카드톡 앱이 설치되어 있지 않습니다</h3>
+      <p>현재 카드톡 앱은 개발 중입니다.<br>곧 출시될 예정이니 조금만 기다려주세요! 🙏</p>
+      <button onclick="closeAppAlert()" class="app-modal-close-btn">확인</button>
+    </div>
+  `;
+
+  // 페이지에 추가
+  document.body.appendChild(alertDiv);
+
+  // 애니메이션으로 표시
+  setTimeout(() => {
+    alertDiv.classList.add("show");
+  }, 100);
+}
+
+// 앱 알림 창 닫기
+function closeAppAlert() {
+  const alertDiv = document.getElementById("appNotInstalledAlert");
+  if (alertDiv) {
+    alertDiv.classList.remove("show");
+    setTimeout(() => {
+      alertDiv.remove();
+    }, 300);
+  }
 }
