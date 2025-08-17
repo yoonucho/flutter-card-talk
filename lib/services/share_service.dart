@@ -77,25 +77,25 @@ class ShareService {
       print('textColor final: #${template.textColor.value.toRadixString(16).substring(2)}');
       print('urlData: $urlData');
       
-      final jsonStr = jsonEncode(urlData);
-      print('jsonStr: $jsonStr');
-      print('jsonStr 길이: ${jsonStr.length}');
-      
-      final utf8Bytes = utf8.encode(jsonStr);
-      print('utf8Bytes: $utf8Bytes');
-      print('utf8Bytes 길이: ${utf8Bytes.length}');
-      
-      // 데이터를 Base64로 인코딩
-      final encodedData = base64Encode(utf8Bytes);
-      // 공백/줄바꿈 제거
-      final cleanedData = encodedData.replaceAll(RegExp(r'\s+'), '');
-      print('base64: $encodedData');
-      print('base64 길이: ${encodedData.length}');
-      print('cleanedData: $cleanedData');
-      print('========================');
-      
-      // URL 안전하게 인코딩 (+ → -, / → _, = 제거)
-      final urlSafeData = Uri.encodeComponent(cleanedData);
+  final jsonStr = jsonEncode(urlData);
+  print('jsonStr: $jsonStr');
+  print('jsonStr 길이: ${jsonStr.length}');
+
+  final utf8Bytes = utf8.encode(jsonStr);
+  print('utf8Bytes: $utf8Bytes');
+  print('utf8Bytes 길이: ${utf8Bytes.length}');
+
+  // URL-safe Base64 인코딩 (base64Url) 및 패딩 제거
+  final urlSafeBase64 = base64Url.encode(utf8Bytes);
+  // 패딩 제거: '=' 문자를 제거하여 URL에 안전하게 전달
+  final withoutPadding = urlSafeBase64.replaceAll('=', '');
+  print('base64Url: $urlSafeBase64');
+  print('base64Url 길이: ${urlSafeBase64.length}');
+  print('withoutPadding: $withoutPadding');
+  print('========================');
+
+  // 추가로 URI 컴포넌트로 인코딩하여 안전하게 전달
+  final urlSafeData = Uri.encodeComponent(withoutPadding);
 
       // 공유 링크 생성
       final shareLink = '${baseShareUrl}?id=$uuid&data=$urlSafeData';

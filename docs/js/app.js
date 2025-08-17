@@ -131,32 +131,35 @@ function loadCardData(shareId) {
 // Base64 디코딩 및 JSON 파싱 처리 (강화된 오류 복구)
 function decodeCardData(encodedData) {
   console.log("디코딩 시작:", encodedData);
-  
+
   try {
-    // 1단계: URL 디코딩
-    let decodedData;
-    try {
-      decodedData = decodeURIComponent(encodedData);
-    } catch (e) {
-      console.warn("URL 디코딩 실패, 원본 사용:", e);
-      decodedData = encodedData;
+    // 1단계: 조건부 URL 디코딩 (이중 디코딩 방지)
+    let decodedData = encodedData;
+    if (typeof decodedData === "string" && decodedData.includes("%")) {
+      try {
+        decodedData = decodeURIComponent(decodedData);
+        console.log("조건부 URL 디코딩 적용");
+      } catch (e) {
+        console.warn("URL 디코딩 실패, 원본 사용:", e);
+      }
+    } else {
+      console.log("URL 디코딩 건너뜀 (% 없음)");
     }
     console.log("URL 디코딩 완료:", decodedData);
-    
+
     // 2단계: Base64 문자열 정리 및 복구
     let base64String = cleanBase64String(decodedData);
     console.log("Base64 정리 완료:", base64String);
-    
+
     // 3단계: Base64 → UTF-8 (여러 방법 시도)
     const jsonString = decodeBase64WithFallback(base64String);
     console.log("UTF-8 디코딩 완료:", jsonString);
-    
+
     // 4단계: JSON 파싱 (색상 오류 수정 포함)
     const cardData = parseJsonWithColorFix(jsonString);
     console.log("JSON 파싱 완료:", cardData);
-    
+
     return cardData;
-    
   } catch (error) {
     console.error("디코딩 오류:", error);
     throw new Error(`카드 데이터 디코딩 실패: ${error.message}`);
@@ -166,23 +169,24 @@ function decodeCardData(encodedData) {
 // Base64 문자열 정리 함수
 function cleanBase64String(base64Data) {
   let cleaned = base64Data;
-  
+
   // 1. 공백 및 개행 문자 제거
   cleaned = cleaned.replace(/\s/g, "");
-  
-  // 2. Base64가 아닌 문자 제거 (알파벳, 숫자, +, /, = 만 유지)
-  cleaned = cleaned.replace(/[^A-Za-z0-9+/=]/g, "");
-  
-  // 3. URL-safe Base64 → 표준 Base64
+
+  // 2. URL-safe Base64 → 표준 Base64 (base64Url에서 온 경우)
   cleaned = cleaned.replace(/-/g, "+").replace(/_/g, "/");
-  
-  // 4. 패딩 정규화
+
+  // 3. Base64가 아닌 문자 제거 (알파벳, 숫자, +, /, = 만 유지)
+  cleaned = cleaned.replace(/[^A-Za-z0-9+/=]/g, "");
+
+  // 4. 패딩 정규화 (누락된 패딩 추가)
   while (cleaned.length % 4) {
     cleaned += "=";
   }
-  
+
   console.log("Base64 정리:", base64Data.length, "→", cleaned.length);
-  
+  console.log("정리 결과 첫 20자:", cleaned.substring(0, 20));
+
   return cleaned;
 }
 
@@ -191,18 +195,18 @@ function decodeBase64WithFallback(base64String) {
   const methods = [
     // 방법 1: 표준 디코딩
     () => decodeBase64Standard(base64String),
-    
+
     // 방법 2: 부분 디코딩 (끝부분 잘림 대응)
     () => decodeBase64Partial(base64String),
-    
+
     // 방법 3: 강제 패딩 추가 후 디코딩
     () => {
       let padded = base64String;
       while (padded.length % 4) padded += "=";
       return decodeBase64Standard(padded);
-    }
+    },
   ];
-  
+
   for (let i = 0; i < methods.length; i++) {
     try {
       const result = methods[i]();
@@ -214,7 +218,7 @@ function decodeBase64WithFallback(base64String) {
       console.log(`디코딩 방법 ${i + 1} 실패:`, error.message);
     }
   }
-  
+
   throw new Error("모든 디코딩 방법 실패");
 }
 
@@ -225,7 +229,7 @@ function decodeBase64Standard(base64String) {
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  
+
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(bytes);
 }
@@ -233,17 +237,21 @@ function decodeBase64Standard(base64String) {
 // 부분 Base64 디코딩 (손상된 데이터 복구)
 function decodeBase64Partial(base64String) {
   // 끝에서부터 4바이트씩 제거하며 디코딩 시도
-  for (let len = base64String.length; len >= Math.max(20, base64String.length - 20); len -= 4) {
+  for (
+    let len = base64String.length;
+    len >= Math.max(20, base64String.length - 20);
+    len -= 4
+  ) {
     try {
       let partial = base64String.substring(0, len);
-      
+
       // 패딩 정규화
       while (partial.length % 4) {
         partial += "=";
       }
-      
+
       const result = decodeBase64Standard(partial);
-      
+
       // 최소한 JSON 구조가 있는지 확인
       if (result && result.includes('{"') && result.includes('"name"')) {
         console.log(`부분 복구 성공: ${len}/${base64String.length} 바이트`);
@@ -253,7 +261,7 @@ function decodeBase64Partial(base64String) {
       continue;
     }
   }
-  
+
   throw new Error("부분 디코딩 실패");
 }
 
@@ -262,20 +270,59 @@ function parseJsonWithColorFix(jsonString) {
   try {
     // 색상 형식 오류 수정
     let fixedJson = jsonString;
-    
+
     // "# [색상값" → "#색상값" 패턴 수정
     fixedJson = fixedJson.replace(/"#\s*\[([a-fA-F0-9]+)"/g, '"#$1"');
-    
+
     // 색상값 뒤의 잘못된 문자 제거
     fixedJson = fixedJson.replace(/"#([a-fA-F0-9]+)[^"]*"/g, '"#$1"');
-    
-    // 제어 문자 제거
-    fixedJson = fixedJson.replace(/[\x00-\x1F\x7F]/g, "");
-    
+
+    // 제어 문자 및 NULL 바이트 제거 (더 강화된 정리)
+    fixedJson = fixedJson.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+
+    // 메시지 필드의 깨진 문자 처리 (정규식으로 안전한 부분만 추출)
+    const messageMatch = fixedJson.match(/"message"\s*:\s*"([^"]*?)"/);
+    if (messageMatch) {
+      let messageContent = messageMatch[1];
+      // 깨진 UTF-8 문자 제거 (한글/영문/이모지/기본 특수문자만 유지)
+      const cleanMessage = messageContent.replace(
+        /[^\u0020-\u007E\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\uD800-\uDBFF\uDC00-\uDFFF\u2600-\u27BF\u1F300-\u1F9FF]/g,
+        ""
+      );
+
+      // 메시지가 너무 짧거나 깨진 경우 템플릿 기본 메시지 사용
+      if (!cleanMessage || cleanMessage.trim().length < 3) {
+        // 템플릿 정보 추출
+        const nameMatch = fixedJson.match(/"name"\s*:\s*"([^"]+)"/);
+        const emojiMatch = fixedJson.match(/"emoji"\s*:\s*"([^"]+)"/);
+        const templateName = nameMatch ? nameMatch[1] : null;
+        const templateEmoji = emojiMatch ? emojiMatch[1] : null;
+
+        const defaultMessage = getTemplateDefaultMessage(
+          templateName,
+          templateEmoji
+        );
+        console.log(
+          "메시지 깨짐 감지 → 템플릿 기본 메시지 사용:",
+          defaultMessage
+        );
+        fixedJson = fixedJson.replace(
+          /"message"\s*:\s*"[^"]*?"/,
+          `"message":"${defaultMessage}"`
+        );
+      } else if (cleanMessage !== messageContent) {
+        console.log("메시지 정리:", messageContent, "→", cleanMessage);
+        fixedJson = fixedJson.replace(
+          /"message"\s*:\s*"[^"]*?"/,
+          `"message":"${cleanMessage}"`
+        );
+      }
+    }
+
     console.log("JSON 수정:", jsonString !== fixedJson ? "적용됨" : "불필요");
-    
+
     const cardData = JSON.parse(fixedJson);
-    
+
     // 색상 값 정리
     if (cardData.backgroundColor) {
       cardData.backgroundColor = sanitizeColor(cardData.backgroundColor);
@@ -283,12 +330,11 @@ function parseJsonWithColorFix(jsonString) {
     if (cardData.textColor) {
       cardData.textColor = sanitizeColor(cardData.textColor);
     }
-    
+
     return cardData;
-    
   } catch (parseError) {
     console.warn("JSON 파싱 실패, 정규식 복구 시도:", parseError);
-    
+
     // 정규식으로 필드 추출
     return extractFieldsWithRegex(jsonString);
   }
@@ -297,47 +343,147 @@ function parseJsonWithColorFix(jsonString) {
 // 정규식으로 필드 추출 (최후의 수단)
 function extractFieldsWithRegex(jsonString) {
   const cardData = {};
-  
+
   // name 필드 추출
   const nameMatch = jsonString.match(/"name"\s*:\s*"([^"]+)"/);
   if (nameMatch) cardData.name = nameMatch[1];
-  
+
   // emoji 필드 추출
   const emojiMatch = jsonString.match(/"emoji"\s*:\s*"([^"]+)"/);
   if (emojiMatch) cardData.emoji = emojiMatch[1];
-  
-  // message 필드 추출
-  const messageMatch = jsonString.match(/"message"\s*:\s*"([^"]+)"/);
-  if (messageMatch) cardData.message = messageMatch[1];
-  
+
+  // message 필드 추출 (더 안전한 방식)
+  const messageMatch = jsonString.match(/"message"\s*:\s*"([^"]*)"/);
+  if (messageMatch) {
+    let message = messageMatch[1];
+    // 깨진 문자 제거 및 정리
+    message = message.replace(
+      /[^\u0020-\u007E\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\uD800-\uDBFF\uDC00-\uDFFF\u2600-\u27BF\u1F300-\u1F9FF]/g,
+      ""
+    );
+
+    // 빈 문자열이거나 너무 짧으면 템플릿 기본 메시지 사용
+    if (!message || message.trim().length < 3) {
+      const defaultMessage = getTemplateDefaultMessage(
+        cardData.name,
+        cardData.emoji
+      );
+      message = defaultMessage;
+      console.log("정규식: 템플릿 기본 메시지 사용:", message);
+    }
+
+    cardData.message = message;
+    console.log("정규식으로 추출한 메시지:", message);
+  }
+
   // backgroundColor 필드 추출 및 정리
   const bgMatch = jsonString.match(/"backgroundColor"\s*:\s*"([^"]+)"/);
   if (bgMatch) {
     const color = sanitizeColor(bgMatch[1]);
     if (color) cardData.backgroundColor = color;
   }
-  
+
   // textColor 필드 추출 및 정리
   const textMatch = jsonString.match(/"textColor"\s*:\s*"([^"]+)"/);
   if (textMatch) {
     const color = sanitizeColor(textMatch[1]);
     if (color) cardData.textColor = color;
   }
-  
+
   // 기본값 설정
   if (!cardData.backgroundColor) cardData.backgroundColor = "#ffffff";
   if (!cardData.textColor) cardData.textColor = "#000000";
-  
+  if (!cardData.message) {
+    cardData.message = getTemplateDefaultMessage(cardData.name, cardData.emoji);
+  }
+
   console.log("정규식 추출 완료:", cardData);
-  
+
   return cardData;
 }
 
+// 템플릿별 기본 메시지 가져오기 함수
+function getTemplateDefaultMessage(templateName, emoji) {
+  console.log("템플릿 기본 메시지 검색:", { templateName, emoji });
 
+  // Flutter TemplateModel의 defaultMessage 데이터
+  const templateMessages = {
+    // 사랑 카테고리
+    "사랑 고백": "당신이 있어서 매일이 특별해요 💕",
+    연인에게: "사랑해요, 오늘도 내일도 💖",
+    로맨틱: "당신과 함께하는 모든 순간이 소중해요 🌹",
 
+    // 축하 카테고리
+    축하해요: "정말 축하해요! 🎉 당신의 성취를 함께 기뻐해요",
+    "성취 축하": "대단해요! 🏆 노력의 결실을 맺었네요",
+    기념일: "특별한 날을 함께 축하해요! 🎊",
 
+    // 생일 카테고리
+    "생일 축하": "생일 축하해요! 🎂 행복한 하루 되세요",
+    "생일 파티": "오늘은 당신의 특별한 날! 🎈 즐거운 생일 파티 되세요",
+    "생일 선물": "생일 선물 같은 하루 되세요! 🎁",
 
+    // 위로 카테고리
+    위로: "힘든 시간이지만 당신 곁에 있어요 🤗",
+    응원: "당신은 충분히 잘하고 있어요! 💪 힘내세요",
+    "따뜻한 말": "어둠 뒤에는 항상 밝은 태양이 떠요 ☀️",
 
+    // 우정 카테고리
+    친구에게: "좋은 친구가 있어서 행복해요 👫",
+    우정: "언제나 든든한 친구, 고마워요 🤝",
+    추억: "함께한 추억들이 소중해요 📸",
+
+    // 감사 카테고리
+    "감사 인사": "정말 감사해요 🙏 당신의 도움이 큰 힘이 되었어요",
+    고마워요: "마음 깊이 고마워요 💝",
+    "감사 표현": "당신 덕분에 더 빛나는 하루예요 🌟",
+  };
+
+  // 1. 템플릿 이름으로 정확한 매칭
+  if (templateName && templateMessages[templateName]) {
+    console.log(
+      `✅ 템플릿 이름 정확 매칭: "${templateName}" → "${templateMessages[templateName]}"`
+    );
+    return templateMessages[templateName];
+  }
+
+  // 2. 이모지로 매칭 (정확한 이모지 매칭)
+  if (emoji) {
+    // 이모지별 템플릿 매핑
+    const emojiToTemplate = {
+      "💕": "사랑 고백",
+      "💖": "연인에게",
+      "🌹": "로맨틱",
+      "🎉": "축하해요",
+      "🏆": "성취 축하",
+      "🎊": "기념일",
+      "🎂": "생일 축하",
+      "🎈": "생일 파티",
+      "🎁": "생일 선물",
+      "🤗": "위로",
+      "💪": "응원",
+      "☀️": "따뜻한 말",
+      "👫": "친구에게",
+      "🤝": "우정",
+      "📸": "추억",
+      "🙏": "감사 인사",
+      "💝": "고마워요",
+      "🌟": "감사 표현",
+    };
+
+    if (emojiToTemplate[emoji]) {
+      const templateName = emojiToTemplate[emoji];
+      console.log(
+        `✅ 이모지 정확 매칭: "${emoji}" → "${templateName}" → "${templateMessages[templateName]}"`
+      );
+      return templateMessages[templateName];
+    }
+  }
+
+  // 3. 기본 메시지 (매칭되지 않는 경우)
+  console.log("❌ 매칭 실패 → 기본 메시지 사용");
+  return "소중한 마음이 담긴 카드입니다 💖";
+}
 
 // 템플릿별 기본 색상 가져오기 함수 (실제 Flutter 템플릿 데이터 기반)
 function getTemplateColors(templateName, emoji) {
@@ -652,8 +798,6 @@ function getTemplateColors(templateName, emoji) {
     textColor: templates.love_001.textColor,
   };
 }
-
-
 
 // 카드 표시 함수
 function displayCard(cardData) {
