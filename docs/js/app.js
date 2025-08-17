@@ -168,10 +168,8 @@ function decodeCardData(encodedData) {
 
 // Base64 문자열 정리 함수
 function cleanBase64String(base64Data) {
-  let cleaned = base64Data;
-
-  // 1. 공백 및 개행 문자 제거
-  cleaned = cleaned.replace(/\s/g, "");
+  let cleaned = base64Data.replace(/ /g, "+");
+  cleaned = cleaned.replace(/[\r\n\t]/g, "");
 
   // 2. URL-safe Base64 → 표준 Base64 (base64Url에서 온 경우)
   cleaned = cleaned.replace(/-/g, "+").replace(/_/g, "/");
