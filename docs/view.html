@@ -159,18 +159,28 @@
 
         <!-- 카드 내용 -->
         <div id="card" class="card" style="display: none">
-          <div id="emoji" class="emoji">💌</div>
-          <div id="title" class="title">카드 제목</div>
-          <div id="message" class="message">카드 메시지</div>
-          <div class="footer">
-            <p>소중한 마음이 담긴 카드입니다</p>
-            <button
-              onclick="sendGratitudeToApp()"
-              class="confetti-button"
-              style="margin-top: 15px"
-            >
-              💝 고마운 마음 전하기
-            </button>
+          <video
+            id="cardVideo"
+            class="card-video"
+            autoplay
+            loop
+            muted
+            playsinline
+          ></video>
+          <div class="card-content">
+            <div id="emoji" class="emoji">💌</div>
+            <div id="title" class="title">카드 제목</div>
+            <div id="message" class="message">카드 메시지</div>
+            <div class="footer">
+              <p>소중한 마음이 담긴 카드입니다</p>
+              <button
+                onclick="sendGratitudeToApp()"
+                class="confetti-button"
+                style="margin-top: 15px"
+              >
+                💝 고마운 마음 전하기
+              </button>
+            </div>
           </div>
         </div>
 

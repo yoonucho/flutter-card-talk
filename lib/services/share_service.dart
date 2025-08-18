@@ -58,7 +58,10 @@ class ShareService {
         'name': template.name,
         'emoji': template.emoji,
         'message': message,
-        'backgroundColor': '#${template.backgroundColor.value.toRadixString(16).substring(2)}',
+        'bgType': template.backgroundType.name, // 'color' 또는 'video'
+        'bgValue': template.backgroundType == TemplateBackgroundType.video
+            ? template.backgroundAsset! // 'assets/videos/love_003.mp4'
+            : '#${template.backgroundColor.value.toRadixString(16).substring(2)}',
         'textColor': '#${template.textColor.value.toRadixString(16).substring(2)}',
       };
       

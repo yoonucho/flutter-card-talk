@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:test/models/template_model.dart';
 import 'package:test/providers/template_provider.dart';
 import 'package:test/views/template/template_edit_screen.dart';
+import 'package:video_player/video_player.dart';
 
 /// 갤러리 화면
 /// 사용자가 만들거나 수정한 템플릿을 보여주는 화면
@@ -140,7 +141,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             itemCount: userTemplates.length,
             itemBuilder: (context, index) {
               final template = userTemplates[index];
-              return _buildTemplateCard(template);
+              return _TemplateCard(
+                  template: template,
+                  onDelete: () => _showDeleteConfirmDialog(context, template));
             },
           );
         },
@@ -164,49 +167,110 @@ class _GalleryScreenState extends State<GalleryScreen> {
       ),
     );
   }
+}
 
-  // 템플릿 카드 위젯
-  Widget _buildTemplateCard(TemplateModel template) {
+// 템플릿 카드 위젯 (StatefulWidget으로 변경)
+class _TemplateCard extends StatefulWidget {
+  final TemplateModel template;
+  final VoidCallback onDelete;
+
+  const _TemplateCard({required this.template, required this.onDelete});
+
+  @override
+  __TemplateCardState createState() => __TemplateCardState();
+}
+
+class __TemplateCardState extends State<_TemplateCard> {
+  VideoPlayerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.template.backgroundType == TemplateBackgroundType.video &&
+        widget.template.backgroundAsset != null &&
+        widget.template.backgroundAsset!.isNotEmpty) {
+      _controller =
+          VideoPlayerController.asset(widget.template.backgroundAsset!)
+            ..initialize().then((_) {
+              if (mounted) {
+                setState(() {});
+                _controller?.play();
+                _controller?.setLooping(true);
+              }
+            });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
         // 템플릿 사용 횟수 증가
         Provider.of<TemplateProvider>(
           context,
           listen: false,
-        ).incrementUsageCount(template.id);
+        ).incrementUsageCount(widget.template.id);
 
         // 템플릿 선택 후 편집 화면으로 이동하고 결과 기다림
         final result = await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => TemplateEditScreen(template: template),
+            builder: (context) =>
+                TemplateEditScreen(template: widget.template),
           ),
         );
 
         // 템플릿이 수정되었으면 목록 새로고침
         if (result == true && mounted) {
-          Provider.of<TemplateProvider>(context, listen: false).loadTemplates();
+          Provider.of<TemplateProvider>(context, listen: false)
+              .loadTemplates();
         }
       },
       child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: template.backgroundColor,
+        clipBehavior: Clip.antiAlias,
+        color: widget.template.backgroundType == TemplateBackgroundType.color
+            ? widget.template.backgroundColor
+            : Colors.black,
         child: Stack(
           children: [
+            // 동영상 배경
+            if (widget.template.backgroundType ==
+                    TemplateBackgroundType.video &&
+                _controller != null &&
+                _controller!.value.isInitialized)
+              SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller!.value.size.width,
+                    height: _controller!.value.size.height,
+                    child: VideoPlayer(_controller!),
+                  ),
+                ),
+              ),
+
             // 템플릿 내용
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(template.emoji, style: const TextStyle(fontSize: 32)),
+                  Text(widget.template.emoji,
+                      style: const TextStyle(fontSize: 32)),
                   const SizedBox(height: 8),
                   Text(
-                    template.name,
+                    widget.template.name,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: template.textColor,
+                      color: widget.template.textColor,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -214,8 +278,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    template.defaultMessage,
-                    style: TextStyle(fontSize: 12, color: template.textColor),
+                    widget.template.defaultMessage,
+                    style: TextStyle(
+                        fontSize: 12, color: widget.template.textColor),
                     textAlign: TextAlign.center,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -227,29 +292,29 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       Icon(
                         Icons.category,
                         size: 14,
-                        color: template.textColor.withOpacity(0.7),
+                        color: widget.template.textColor.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        template.category.displayName,
+                        widget.template.category.displayName,
                         style: TextStyle(
                           fontSize: 12,
-                          color: template.textColor.withOpacity(0.7),
+                          color: widget.template.textColor.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      if (template.usageCount > 0) ...[
+                      if (widget.template.usageCount > 0) ...[
                         Icon(
                           Icons.favorite,
                           size: 14,
-                          color: template.textColor.withOpacity(0.7),
+                          color: widget.template.textColor.withOpacity(0.7),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${template.usageCount}',
+                          '${widget.template.usageCount}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: template.textColor.withOpacity(0.7),
+                            color: widget.template.textColor.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -266,9 +331,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
               child: IconButton(
                 icon: Icon(
                   Icons.delete,
-                  color: template.textColor.withOpacity(0.7),
+                  color: widget.template.textColor.withOpacity(0.7),
                 ),
-                onPressed: () => _showDeleteConfirmDialog(context, template),
+                onPressed: widget.onDelete,
               ),
             ),
           ],
