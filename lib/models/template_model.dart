@@ -39,8 +39,14 @@ class TemplateModel {
   /// 템플릿이 속한 카테고리
   final TemplateCategory category;
 
-  /// 템플릿의 배경색
+  /// 템플릿 배경 유형 (색상 또는 비디오)
+  final TemplateBackgroundType backgroundType;
+
+  /// 템플릿의 배경색 (비디오 배경의 fallback으로도 사용)
   final Color backgroundColor;
+
+  /// 비디오 배경 에셋 경로 (선택 사항)
+  final String? backgroundAsset;
 
   /// 템플릿의 텍스트 색상
   final Color textColor;
@@ -72,6 +78,8 @@ class TemplateModel {
     required this.backgroundColor,
     required this.textColor,
     required this.defaultMessage,
+    this.backgroundType = TemplateBackgroundType.color,
+    this.backgroundAsset,
     this.isUserCreated = false,
     this.usageCount = 0,
   });
@@ -85,7 +93,9 @@ class TemplateModel {
       'name': name,
       'emoji': emoji,
       'category': category.name,
+      'backgroundType': backgroundType.name,
       'backgroundColor': backgroundColor.value,
+      'backgroundAsset': backgroundAsset,
       'textColor': textColor.value,
       'defaultMessage': defaultMessage,
       'isUserCreated': isUserCreated,
@@ -105,7 +115,12 @@ class TemplateModel {
       category: TemplateCategory.values.firstWhere(
         (e) => e.name == json['category'],
       ),
+      backgroundType: TemplateBackgroundType.values.firstWhere(
+        (e) => e.name == json['backgroundType'],
+        orElse: () => TemplateBackgroundType.color,
+      ),
       backgroundColor: Color(json['backgroundColor']),
+      backgroundAsset: json['backgroundAsset'],
       textColor: Color(json['textColor']),
       defaultMessage: json['defaultMessage'],
       isUserCreated: json['isUserCreated'] ?? false,
@@ -130,7 +145,9 @@ class TemplateModel {
     String? name,
     String? emoji,
     TemplateCategory? category,
+    TemplateBackgroundType? backgroundType,
     Color? backgroundColor,
+    String? backgroundAsset,
     Color? textColor,
     String? defaultMessage,
     bool? isUserCreated,
@@ -141,7 +158,9 @@ class TemplateModel {
       name: name ?? this.name,
       emoji: emoji ?? this.emoji,
       category: category ?? this.category,
+      backgroundType: backgroundType ?? this.backgroundType,
       backgroundColor: backgroundColor ?? this.backgroundColor,
+      backgroundAsset: backgroundAsset ?? this.backgroundAsset,
       textColor: textColor ?? this.textColor,
       defaultMessage: defaultMessage ?? this.defaultMessage,
       isUserCreated: isUserCreated ?? this.isUserCreated,
@@ -186,8 +205,10 @@ class TemplateData {
       name: '로맨틱',
       emoji: '🌹',
       category: TemplateCategory.love,
-      backgroundColor: Color(0xFFFFEBEE),
-      textColor: Color(0xFFAD1457),
+      backgroundType: TemplateBackgroundType.video,
+      backgroundAsset: 'assets/videos/love_003.mp4',
+      backgroundColor: Color(0xFFFFEBEE), // 비디오 로딩 중 또는 실패 시 보일 배경색
+      textColor: Color(0xFFAD1457), // 비디오와 어울리는 텍스트 색상
       defaultMessage: '당신과 함께하는 모든 순간이 소중해요 🌹',
     ),
 
@@ -367,4 +388,13 @@ class TemplateData {
     }
     return popularTemplates;
   }
+}
+
+/// 템플릿 배경 유형
+enum TemplateBackgroundType {
+  /// 단색 배경
+  color,
+
+  /// 비디오 배경
+  video,
 }

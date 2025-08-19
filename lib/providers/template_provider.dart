@@ -67,6 +67,15 @@ class TemplateProvider with ChangeNotifier {
         .toList();
   }
 
+  // ID로 템플릿 찾기
+  TemplateModel? findById(String id) {
+    try {
+      return _templates.firstWhere((template) => template.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // 새 템플릿 추가
   Future<void> addTemplate(TemplateModel template) async {
     try {
@@ -76,6 +85,8 @@ class TemplateProvider with ChangeNotifier {
         name: template.name,
         emoji: template.emoji,
         category: template.category,
+        backgroundType: template.backgroundType, // 동영상 타입 추가
+        backgroundAsset: template.backgroundAsset, // 동영상 경로 추가
         backgroundColor: template.backgroundColor,
         textColor: template.textColor,
         defaultMessage: template.defaultMessage,
@@ -107,6 +118,8 @@ class TemplateProvider with ChangeNotifier {
             name: template.name,
             emoji: template.emoji,
             category: template.category,
+            backgroundType: template.backgroundType, // 동영상 타입 추가
+            backgroundAsset: template.backgroundAsset, // 동영상 경로 추가
             backgroundColor: template.backgroundColor,
             textColor: template.textColor,
             defaultMessage: template.defaultMessage,

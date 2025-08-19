@@ -6,7 +6,7 @@ import 'package:test/models/template_model.dart';
 import 'package:test/providers/template_provider.dart';
 import 'package:test/services/share_service.dart';
 import 'package:test/utils/constants.dart';
-// import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 /// 템플릿 편집 화면
 /// 템플릿을 생성하거나 수정할 수 있는 화면
@@ -27,10 +27,11 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
   // 폼 키
   final _formKey = GlobalKey<FormState>();
 
-  // 텍스트 컨트롤러
+  // 컨트롤러
   late TextEditingController _nameController;
   late TextEditingController _emojiController;
   late TextEditingController _messageController;
+  VideoPlayerController? _videoController;
 
   // 선택된 카테고리
   late TemplateCategory _selectedCategory;
@@ -46,7 +47,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
   String? _shareLink;
 
   // 저장된 템플릿
-  TemplateModel? _template;
+  late TemplateModel _template;
 
   // 저장 여부
   bool _isSaved = false;
@@ -55,24 +56,52 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
   void initState() {
     super.initState();
 
-    // 기존 템플릿이 있으면 해당 값으로 초기화, 없으면 기본값 사용
-    final template = widget.template;
+    final templateProvider = Provider.of<TemplateProvider>(context, listen: false);
+
+    // 기존 템플릿이 있으면 해당 ID로 최신 정보를 가져오고, 없으면 기본값 사용
+    if (widget.template != null) {
+      // Provider에서 최신 템플릿 정보를 가져옴
+      _template = templateProvider.findById(widget.template!.id) ?? widget.template!;
+    } else {
+      _template = TemplateModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: '',
+        emoji: '😊',
+        category: TemplateCategory.love,
+        backgroundColor: const Color(0xFFFFE4E6),
+        textColor: const Color(0xFFE91E63),
+        defaultMessage: '',
+        isUserCreated: true,
+        usageCount: 0,
+        backgroundType: TemplateBackgroundType.color,
+      );
+    }
+
     // 항상 새로운 편집 세션을 시작할 때는 저장되지 않은 상태로 시작
     _isSaved = false;
-    _template = template;
 
-    _nameController = TextEditingController(text: template?.name ?? '');
+    _nameController = TextEditingController(text: _template.name);
+    _emojiController = TextEditingController(text: _template.emoji);
+    _messageController = TextEditingController(text: _template.defaultMessage);
+    _selectedCategory = _template.category;
+    _backgroundColor = _template.backgroundColor;
+    _textColor = _template.textColor;
 
-    _emojiController = TextEditingController(text: template?.emoji ?? '😊');
+    _initializeVideoPlayer();
+  }
 
-    _messageController = TextEditingController(
-      text: template?.defaultMessage ?? '',
-    );
-
-    _selectedCategory = template?.category ?? TemplateCategory.love;
-
-    _backgroundColor = template?.backgroundColor ?? const Color(0xFFFFE4E6);
-    _textColor = template?.textColor ?? const Color(0xFFE91E63);
+  Future<void> _initializeVideoPlayer() async {
+    if (_template.backgroundType == TemplateBackgroundType.video &&
+        _template.backgroundAsset != null) {
+      _videoController = VideoPlayerController.asset(_template.backgroundAsset!)
+        ..initialize().then((_) {
+          if (mounted) {
+            setState(() {});
+            _videoController?.play();
+            _videoController?.setLooping(true);
+          }
+        });
+    }
   }
 
   @override
@@ -80,6 +109,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
     _nameController.dispose();
     _emojiController.dispose();
     _messageController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -101,10 +131,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
       );
 
       // 템플릿 데이터 생성
-      final template = TemplateModel(
-        id:
-            widget.template?.id ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+      final template = _template.copyWith(
         name: _nameController.text,
         emoji: _emojiController.text,
         category: _selectedCategory,
@@ -112,7 +139,6 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         textColor: _textColor,
         defaultMessage: _messageController.text,
         isUserCreated: true,
-        usageCount: widget.template?.usageCount ?? 0,
       );
 
       // 기존 템플릿 수정 또는 새 템플릿 추가
@@ -174,10 +200,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
       );
 
       // 템플릿 데이터 생성
-      final template = TemplateModel(
-        id:
-            widget.template?.id ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+      final template = _template.copyWith(
         name: _nameController.text,
         emoji: _emojiController.text,
         category: _selectedCategory,
@@ -185,7 +208,6 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
         textColor: _textColor,
         defaultMessage: _messageController.text,
         isUserCreated: true,
-        usageCount: widget.template?.usageCount ?? 0,
       );
 
       // 기존 템플릿 수정 또는 새 템플릿 추가
@@ -317,6 +339,11 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
               setState(() {
                 if (isBackgroundColor) {
                   _backgroundColor = color;
+                  _template = _template.copyWith(
+                      backgroundType: TemplateBackgroundType.color);
+                  _videoController?.pause();
+                  _videoController?.dispose();
+                  _videoController = null;
                 } else {
                   _textColor = color;
                 }
@@ -335,6 +362,100 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
             child: const Text('확인'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTemplatePreview() {
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: _videoController == null ? _backgroundColor : Colors.black,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 비디오 배경
+            if (_videoController != null &&
+                _videoController!.value.isInitialized)
+              FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController!.value.size.width,
+                  height: _videoController!.value.size.height,
+                  child: VideoPlayer(_videoController!),
+                ),
+              ),
+            // 카드 내용
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _emojiController.text.isEmpty
+                        ? '😊'
+                        : _emojiController.text,
+                    style: const TextStyle(fontSize: 48),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _nameController.text.isEmpty
+                        ? '카드 이름'
+                        : _nameController.text,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: _textColor,
+                      shadows: [
+                        if (_videoController != null)
+                          const Shadow(
+                            blurRadius: 4.0,
+                            color: Colors.black54,
+                            offset: Offset(2.0, 2.0),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      _messageController.text.isEmpty
+                          ? '카드 메시지를 입력하세요.'
+                          : _messageController.text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _textColor,
+                        shadows: [
+                          if (_videoController != null)
+                            const Shadow(
+                              blurRadius: 4.0,
+                              color: Colors.black54,
+                              offset: Offset(2.0, 2.0),
+                            ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -369,58 +490,7 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               // 템플릿 미리보기
-              Container(
-                height: 200,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: _backgroundColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _emojiController.text.isEmpty
-                            ? '😊'
-                            : _emojiController.text,
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _nameController.text.isEmpty
-                            ? '카드 이름'
-                            : _nameController.text,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: _textColor,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          _messageController.text.isEmpty
-                              ? '카드 메시지를 입력하세요.'
-                              : _messageController.text,
-                          style: TextStyle(fontSize: 16, color: _textColor),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildTemplatePreview(),
 
               // 공유 링크 표시 부분 제거
 
@@ -500,8 +570,8 @@ class _TemplateEditScreenState extends State<TemplateEditScreen> {
                         backgroundColor: _backgroundColor,
                         foregroundColor:
                             _backgroundColor.computeLuminance() > 0.5
-                            ? Colors.black
-                            : Colors.white,
+                                ? Colors.black
+                                : Colors.white,
                       ),
                     ),
                   ),

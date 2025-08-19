@@ -822,41 +822,123 @@ function hideLoadingAndShowCard() {
   card.style.display = "block";
 }
 
-// 카드 콘텐츠 설정
+// 카드 내용 설정
 function setCardContent(cardData) {
-  if (cardData.emoji) {
-    document.getElementById("emoji").textContent = cardData.emoji;
-  }
-  if (cardData.name) {
-    document.getElementById("title").textContent = cardData.name;
-  }
-  if (cardData.message) {
-    document.getElementById("message").textContent = cardData.message;
-  }
+  document.getElementById("emoji").textContent = cardData.emoji || "💌";
+  document.getElementById("title").textContent = cardData.name || "특별한 카드";
+  document.getElementById("message").textContent =
+    cardData.message || "소중한 마음을 전합니다.";
 }
 
 // 카드 스타일 적용
 function applyCardStyles(cardData) {
   const card = document.getElementById("card");
+  const cardContent = card.querySelector(".card-content");
+  const cardVideo = document.getElementById("cardVideo");
 
-  // 배경색 적용
-  if (cardData.backgroundColor) {
-    const bgColor = sanitizeColor(cardData.backgroundColor);
-    if (bgColor) {
-      card.style.backgroundColor = bgColor;
-    }
+  console.log("applyCardStyles 호출: ", cardData);
+  console.log("현재 페이지 URL:", window.location.href);
+  try {
+    const urlParamsDebug = Object.fromEntries(
+      new URLSearchParams(window.location.search).entries()
+    );
+    console.log("URL 파라미터(Debug):", urlParamsDebug);
+  } catch (e) {
+    console.warn("URL 파라미터 파싱 실패:", e);
   }
 
-  // 텍스트 색상 적용
-  if (cardData.textColor) {
-    const textColor = sanitizeColor(cardData.textColor);
-    if (textColor) {
-      card.style.color = textColor;
-    }
-  }
-}
+  if (cardData.bgType === "video" && cardData.bgValue) {
+    // 보통 bgValue는 'videos/love_003.mp4' 또는 'assets/videos/..' 형태일 수 있음
+    let videoPath = cardData.bgValue;
+    console.log("원본 bgValue:", videoPath);
 
-// 색상 값 정리 및 검증 (강화된 처리)
+    // 경로가 상대적으로 assets/... 이면 docs/ 경로로 변경
+    if (typeof videoPath === "string" && videoPath.startsWith("assets/")) {
+      videoPath = videoPath.replace(/^assets\//, ""); // videos/...
+      console.log("assets 경로 변환 ->", videoPath);
+    }
+
+    // Normalize to an absolute URL we can fetch from the current origin
+    let fullVideoUrl = videoPath;
+    if (!/^https?:\/\//i.test(videoPath)) {
+      // make sure there is no leading slash duplication
+      const rel = videoPath.replace(/^\/+/, "");
+      fullVideoUrl = window.location.origin + "/" + rel; // e.g. https://localhost:8000/videos/love_003.mp4
+    }
+
+    console.log("사용할 비디오 전체 URL:", fullVideoUrl);
+
+    if (!cardVideo) {
+      console.warn(
+        "cardVideo 요소를 찾을 수 없습니다. HTML에 id='cardVideo'가 있는지 확인하세요."
+      );
+      card.style.backgroundColor = cardData.backgroundColor || "#ffccd5";
+      cardContent.style.color = cardData.textColor || "#333";
+      return;
+    }
+
+    // 이벤트 핸들러로 상세 오류 로깅
+    cardVideo.onerror = function (e) {
+      console.error("<video> element error event:", e);
+    };
+    cardVideo.oncanplay = function () {
+      console.log("<video> canplay 이벤트 발생 (재생 준비됨)", fullVideoUrl);
+    };
+
+    // 비디오 존재 여부 확인 (fetch HEAD) — 실패하면 직접 src 설정으로 폴백
+    console.log("HEAD 요청 시도:", fullVideoUrl);
+    fetch(fullVideoUrl, { method: "HEAD" })
+      .then((res) => {
+        if (res.ok) {
+          console.log("비디오 파일 존재 확인(HEAD):", fullVideoUrl);
+          card.style.backgroundColor = "transparent";
+          cardVideo.src = fullVideoUrl;
+          cardVideo.style.display = "block";
+          const p = cardVideo.play();
+          if (p && typeof p.catch === "function")
+            p.catch((e) => console.warn("video play 실패:", e));
+        } else {
+          console.warn(
+            "비디오 파일을 찾을 수 없음 (HEAD):",
+            fullVideoUrl,
+            "status=",
+            res.status
+          );
+          // fallback: 숨기고 색상 배경 사용
+          cardVideo.style.display = "none";
+          card.style.backgroundColor = cardData.backgroundColor || "#ffccd5";
+        }
+      })
+      .catch((err) => {
+        console.error("비디오 파일 존재 체크 중 오류 (HEAD):", err);
+        // 폴백: 직접 src를 설정하고 video.onerror로 진단
+        try {
+          cardVideo.src = fullVideoUrl;
+          cardVideo.style.display = "block";
+          card.style.backgroundColor = "transparent";
+          const p2 = cardVideo.play();
+          if (p2 && typeof p2.catch === "function")
+            p2.catch((e) => console.warn("video play 실패(직접시도):", e));
+        } catch (e2) {
+          console.error("직접 src 설정 중 오류:", e2);
+          cardVideo.style.display = "none";
+          card.style.backgroundColor = cardData.backgroundColor || "#ffccd5";
+        }
+      });
+  } else {
+    // 색상 배경
+    if (cardVideo) cardVideo.style.display = "none";
+    card.style.backgroundColor = cardData.backgroundColor || "#ffccd5";
+  }
+
+  cardContent.style.color = cardData.textColor || "#333";
+  // 텍스트 그림자 추가 (비디오 배경일 때 가독성 향상)
+  if (cardData.bgType === "video") {
+    cardContent.style.textShadow = "0 2px 4px rgba(0,0,0,0.5)";
+  } else {
+    cardContent.style.textShadow = "none";
+  }
+} // 색상 값 정리 및 검증 (강화된 처리)
 function sanitizeColor(colorValue) {
   if (!colorValue || typeof colorValue !== "string") {
     console.log("색상 값이 비어있거나 문자열이 아님:", colorValue);

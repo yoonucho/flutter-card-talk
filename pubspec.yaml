@@ -28,6 +28,7 @@ dependencies:
   # 애니메이션
   lottie: ^3.1.0
   confetti: ^0.7.0
+  video_player: ^2.8.6
 
   # 로컬 서버 구현
   shelf: ^1.4.1
@@ -48,6 +49,7 @@ flutter:
   # 앱에서 사용할 에셋
   assets:
     - assets/images/
+    - assets/videos/
     - assets/animations/
 
   # 폰트 설정
