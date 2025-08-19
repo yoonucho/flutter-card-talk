@@ -861,9 +861,20 @@ function applyCardStyles(cardData) {
     // Normalize to an absolute URL we can fetch from the current origin
     let fullVideoUrl = videoPath;
     if (!/^https?:\/\//i.test(videoPath)) {
-      // make sure there is no leading slash duplication
-      const rel = videoPath.replace(/^\/+/, "");
-      fullVideoUrl = window.location.origin + "/" + rel; // e.g. https://localhost:8000/videos/love_003.mp4
+      const isGitHubPages = window.location.hostname.endsWith("github.io");
+      const pathSegments = window.location.pathname
+        .split("/")
+        .filter((segment) => segment); // remove empty strings
+
+      let basePath = "";
+      // For GitHub Pages, the path needs to be relative to the repo root.
+      // e.g., /<repo-name>/
+      if (isGitHubPages && pathSegments.length > 0) {
+        basePath = "/" + pathSegments[0];
+      }
+
+      const relVideoPath = videoPath.replace(/^\/+/, "");
+      fullVideoUrl = window.location.origin + basePath + "/" + relVideoPath;
     }
 
     console.log("사용할 비디오 전체 URL:", fullVideoUrl);
